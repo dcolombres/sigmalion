@@ -10,6 +10,7 @@ import IntegracionesListView from '../views/IntegracionesListView.vue'
 import IntegracionDetailView from '../views/IntegracionDetailView.vue'
 import UsersListView from '../views/UsersListView.vue'
 import UserDetailView from '../views/UserDetailView.vue'
+import AdminView from '../views/AdminView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -19,6 +20,12 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: DashboardView
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/proyectos',

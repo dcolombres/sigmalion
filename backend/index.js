@@ -34,6 +34,7 @@ const integracionesRoutes = require('./routes/integraciones');
 const usersRoutes = require('./routes/users');
 const clientesRoutes = require('./routes/clientes');
 const tecnologiasRoutes = require('./routes/tecnologias');
+const adminRoutes = require('./routes/admin');
 
 app.use('/api/auth', authRoutes(prisma, JWT_SECRET));
 app.use('/api/proyectos', proyectosRoutes(prisma, authenticateToken));
@@ -41,6 +42,7 @@ app.use('/api/staff', staffRoutes(prisma, authenticateToken));
 app.use('/api/integraciones', integracionesRoutes(prisma, authenticateToken));
 app.use('/api/users', usersRoutes(prisma, authenticateToken));
 app.use('/api/clientes', clientesRoutes(prisma, authenticateToken));
+app.use('/api/admin', adminRoutes(prisma, authenticateToken));
 
 // Health check endpoint para testing
 app.get('/api/health', (req, res) => {

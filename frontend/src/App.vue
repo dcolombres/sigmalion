@@ -47,6 +47,9 @@ const toggleSidebar = () => {
         <RouterLink v-if="authStore.isAuthenticated" to="/users" class="list-group-item">
           <i class="fas fa-user-shield"></i> <span>Usuarios</span>
         </RouterLink>
+        <RouterLink v-if="authStore.isAuthenticated" to="/admin" class="list-group-item">
+          <i class="fas fa-file-import"></i> <span>Administración</span>
+        </RouterLink>
       </div>
 
       <div class="sidebar-footer">
