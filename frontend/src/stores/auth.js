@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || null,
     user: null,
+    isLoading: false,
   }),
 
   getters: {
@@ -32,6 +33,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async login(email, password) {
+      this.isLoading = true;
       const notificationStore = useNotificationStore();
       try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
@@ -45,10 +47,13 @@ export const useAuthStore = defineStore('auth', {
         const errorMessage = error.response?.data?.detail || 'Error al iniciar sesión.';
         notificationStore.showNotification(errorMessage, 'error');
         throw error; // Re-throw for component to handle
+      } finally {
+        this.isLoading = false;
       }
     },
 
     async register(nombre, email, password) {
+      this.isLoading = true;
       const notificationStore = useNotificationStore();
       try {
         await axios.post(`${API_BASE_URL}/auth/register`, { nombre, email, password });
@@ -58,6 +63,8 @@ export const useAuthStore = defineStore('auth', {
         const errorMessage = error.response?.data?.detail || 'Error en el registro.';
         notificationStore.showNotification(errorMessage, 'error');
         throw error;
+      } finally {
+        this.isLoading = false;
       }
     },
 

@@ -1,56 +1,60 @@
 <template>
-  <div class="card h-100 shadow-sm">
-    <div class="card-header d-flex justify-content-between align-items-center">
+  <div class="card h-100">
+    <div class="card-header">
       <h5 class="mb-0">{{ title }}</h5>
-      <button v-if="!isEditing" @click="startEditing" class="btn btn-sm btn-outline-primary">Editar</button>
+      <button v-if="!isEditing" @click="startEditing" class="btn btn-sm btn-primary">Editar</button>
     </div>
     <div class="card-body">
       <form v-if="isEditing" @submit.prevent="saveChanges">
-        <div v-for="field in formFields" :key="field.key" class="mb-3">
-          <label :for="field.key" class="form-label">{{ field.label }}</label>
-          <input v-if="field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date'"
-                 :type="field.type"
-                 :id="field.key"
-                 v-model="localFormData[field.key]"
-                 class="form-control"
-                 :required="field.required"
-          >
-          <textarea v-else-if="field.type === 'textarea'"
-                    :id="field.key"
-                    v-model="localFormData[field.key]"
-                    class="form-control"
-                    :required="field.required"
-          ></textarea>
-          <select v-else-if="field.type === 'select'"
+        <div class="row g-3">
+          <div v-for="field in formFields" :key="field.key" :class="[field.type === 'textarea' ? 'col-12' : 'col-md-6', field.fieldClass]">
+            <label :for="field.key" class="form-label">{{ field.label }}</label>
+            <input v-if="field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date'"
+                  :type="field.type"
                   :id="field.key"
                   v-model="localFormData[field.key]"
-                  class="form-select"
+                  class="form-control"
                   :required="field.required"
-          >
-            <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.text }}</option>
-          </select>
-          <div v-else-if="field.type === 'checkbox'" class="form-check">
-            <input type="checkbox"
-                   :id="field.key"
-                   v-model="localFormData[field.key]"
-                   class="form-check-input"
             >
-            <label :for="field.key" class="form-check-label">{{ field.label }}</label>
+            <textarea v-else-if="field.type === 'textarea'"
+                      :id="field.key"
+                      v-model="localFormData[field.key]"
+                      class="form-control"
+                      :required="field.required"
+            ></textarea>
+            <select v-else-if="field.type === 'select'"
+                    :id="field.key"
+                    v-model="localFormData[field.key]"
+                    class="form-select"
+                    :required="field.required"
+            >
+              <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.text }}</option>
+            </select>
+            <div v-else-if="field.type === 'checkbox'" class="form-check mt-2">
+              <input type="checkbox"
+                    :id="field.key"
+                    v-model="localFormData[field.key]"
+                    class="form-check-input"
+              >
+              <label :for="field.key" class="form-check-label">{{ field.label }}</label>
+            </div>
           </div>
         </div>
-        <div class="d-flex justify-content-end mt-3">
-          <button type="submit" class="btn btn-success me-2">Guardar</button>
+        <div class="d-flex justify-content-end mt-4">
+          <button type="submit" class="btn btn-primary me-2">Guardar</button>
           <button type="button" @click="cancelEditing" class="btn btn-secondary">Cancelar</button>
         </div>
       </form>
       <div v-else>
-        <div v-if="data">
-          <p v-for="field in fields" :key="field.key" class="card-text mb-1">
-            <strong>{{ field.label }}:</strong>
-            <span v-if="field.type === 'boolean'">{{ data[field.key] ? 'Sí' : 'No' }}</span>
-            <span v-else-if="field.type === 'date'">{{ data[field.key] ? new Date(data[field.key]).toLocaleDateString() : 'N/A' }}</span>
-            <span v-else>{{ data[field.key] || 'N/A' }}</span>
-          </p>
+        <div v-if="data" class="row g-3">
+          <div v-for="field in fields" :key="field.key" :class="['col-md-6', field.fieldClass]">
+            <p class="card-text mb-1">
+              <strong>{{ field.label }}:</strong>
+              <span v-if="field.type === 'boolean'">{{ data[field.key] ? 'Sí' : 'No' }}</span>
+              <span v-else-if="field.type === 'date'">{{ data[field.key] ? new Date(data[field.key]).toLocaleDateString() : 'N/A' }}</span>
+              <span v-else>{{ data[field.key] || 'N/A' }}</span>
+            </p>
+          </div>
         </div>
         <div v-else class="text-muted">
           No hay datos disponibles.
@@ -87,11 +91,9 @@ const emit = defineEmits(['save', 'cancel']);
 const isEditing = ref(false);
 const localFormData = ref({});
 
-// Watch for changes in the 'data' prop to update localFormData when not editing
 watch(() => props.data, (newData) => {
   if (!isEditing.value) {
     localFormData.value = newData ? { ...newData } : {};
-    // Special handling for date fields to format them for input type="date"
     props.formFields.forEach(field => {
       if (field.type === 'date' && localFormData.value[field.key]) {
         localFormData.value[field.key] = new Date(localFormData.value[field.key]).toISOString().split('T')[0];
@@ -103,7 +105,6 @@ watch(() => props.data, (newData) => {
 const startEditing = () => {
   isEditing.value = true;
   localFormData.value = props.data ? { ...props.data } : {};
-  // Special handling for date fields to format them for input type="date"
   props.formFields.forEach(field => {
     if (field.type === 'date' && localFormData.value[field.key]) {
       localFormData.value[field.key] = new Date(localFormData.value[field.key]).toISOString().split('T')[0];
@@ -118,9 +119,7 @@ const saveChanges = () => {
 
 const cancelEditing = () => {
   isEditing.value = false;
-  // Revert local form data to original prop data
   localFormData.value = props.data ? { ...props.data } : {};
-  // Special handling for date fields to format them for input type="date"
   props.formFields.forEach(field => {
     if (field.type === 'date' && localFormData.value[field.key]) {
       localFormData.value[field.key] = new Date(localFormData.value[field.key]).toISOString().split('T')[0];
@@ -130,22 +129,9 @@ const cancelEditing = () => {
 </script>
 
 <style scoped>
-.card {
-  border-radius: 0.75rem;
-  overflow: hidden;
-}
-
 .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  padding: 0.75rem 1.25rem;
-}
-
-.card-body {
-  padding: 1.25rem;
-}
-
-.form-label {
-  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

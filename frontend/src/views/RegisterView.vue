@@ -18,89 +18,74 @@ const handleRegister = async () => {
     router.push('/login'); // Redirect to login after successful registration
   } catch (error) {
     errorMessage.value = error.response?.data?.error || 'Registration failed.';
-    console.error('Registration error:', error);
   }
 };
 </script>
 
 <template>
-  <main class="auth-container">
-    <h2>Register</h2>
-    <form @submit.prevent="handleRegister" class="auth-form">
-      <div class="form-group">
-        <label for="nombre">Name:</label>
-        <input type="text" id="nombre" v-model="nombre" required>
+  <div class="auth-wrapper">
+    <div class="auth-card card">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <img src="/src/img/logosigma.svg" alt="SIGMA Logo" width="150" />
+          <h2 class="mt-3">Register</h2>
+        </div>
+        <form @submit.prevent="handleRegister">
+          <div class="form-group mb-3">
+            <label for="name">Name</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-user"></i></span>
+              <input type="text" id="name" class="form-control" v-model="nombre" required placeholder="Enter your name">
+            </div>
+          </div>
+          <div class="form-group mb-3">
+            <label for="email">Email</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input type="email" id="email" class="form-control" v-model="email" required placeholder="Enter your email">
+            </div>
+          </div>
+          <div class="form-group mb-4">
+            <label for="password">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input type="password" id="password" class="form-control" v-model="password" required placeholder="Enter your password">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Register</button>
+          <p v-if="errorMessage" class="error-message mt-3">{{ errorMessage }}</p>
+        </form>
+        <p class="text-center mt-4">Already have an account? <RouterLink to="/login">Login here</RouterLink></p>
       </div>
-      <div class="form-group">
-        <label for="email">Email:</label>
-        <input type="email" id="email" v-model="email" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <button type="submit">Register</button>
-      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-      <p class="switch-auth">Already have an account? <RouterLink to="/login">Login here</RouterLink></p>
-    </form>
-  </main>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.auth-container {
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  background-color: #fff;
+.auth-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background-color);
 }
-.auth-container h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.auth-form .form-group {
-  margin-bottom: 15px;
-}
-.auth-form label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-.auth-form input {
+
+.auth-card {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  max-width: 450px;
 }
-.auth-form button {
-  width: 100%;
-  padding: 10px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
+
+.input-group-text {
+    background-color: #f0f0f0;
+    border-right: none;
 }
-.auth-form button:hover {
-  background-color: #2980b9;
+
+.form-control {
+    border-left: none;
 }
+
 .error-message {
   color: #e74c3c;
   text-align: center;
-  margin-top: 10px;
-}
-.switch-auth {
-  text-align: center;
-  margin-top: 15px;
-}
-.switch-auth a {
-  color: #3498db;
-  text-decoration: none;
-}
-.switch-auth a:hover {
-  text-decoration: underline;
 }
 </style>
