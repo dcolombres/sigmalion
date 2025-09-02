@@ -4,6 +4,25 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
+## [0.3.0] - 2025-09-02
+
+### Añadido
+- **Dashboard:**
+  - Nueva vista de Dashboard con gráficos configurables para visualizar métricas clave.
+  - Componentes `ChartCard` para mostrar gráficos y `DashboardConfigManager` para gestionar la configuración del dashboard.
+- **Gestión de Proyectos:**
+  - Añadido campo `estado` a los proyectos para un mejor seguimiento.
+- **Gestión de Usuarios:**
+  - Implementación de roles de usuario (`USER`, `ADMIN`, `SUPERADMIN`) para control de acceso.
+- **General:**
+  - Nuevos endpoints en el backend para el dashboard y su configuración.
+  - Nuevas pruebas unitarias y de extremo a extremo para las nuevas funcionalidades.
+  - Actualización masiva de dependencias en el frontend.
+  - Nueva documentación técnica y de marketing.
+
+### Corregido
+- Se ha modificado la ruta de staff para que devuelva el nombre del staff y no el id.
+
 ## [0.2.2] - 2025-08-29
 
 ### Mejorado
