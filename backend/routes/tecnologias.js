@@ -1,7 +1,8 @@
 const express = require('express');
 const Joi = require('joi');
+const { checkAdmin } = require('../middleware/rbac');
 
-module.exports = (prisma, authenticateToken) => {
+module.exports = (prisma) => {
   const router = express.Router();
 
   const tecnologiasSchema = Joi.object({
@@ -9,7 +10,8 @@ module.exports = (prisma, authenticateToken) => {
     lenguaje_desarrollo: Joi.string().allow(null, ''),
     base_datos: Joi.string().allow(null, ''),
     control_versiones: Joi.string().allow(null, ''),
-    tamano_bd: Joi.string().allow(null, ''),
+    tamano_bd_value: Joi.number().allow(null),
+    tamano_bd_unit: Joi.string().valid('MB', 'GB').allow(null, ''),
     alojamiento_infra: Joi.string().allow(null, ''),
     label: Joi.string().allow(null, ''),
     mantenimiento_soporte: Joi.string().allow(null, ''),
@@ -22,10 +24,26 @@ module.exports = (prisma, authenticateToken) => {
   });
 
   // GET all tecnologias
-  router.get('/', authenticateToken, async (req, res) => {
+  router.get('/', async (req, res) => {
+    const { page, pageSize } = req.query;
+    const take = parseInt(pageSize, 10) || 10;
+    const skip = (parseInt(page, 10) - 1) * take || 0;
+
     try {
-      const tecnologias = await prisma.tecnologias.findMany();
-      res.json(tecnologias);
+      const [tecnologias, totalCount] = await prisma.$transaction([
+        prisma.tecnologias.findMany({
+          skip,
+          take,
+          select: {
+            id: true,
+            label: true,
+            lenguaje_desarrollo: true,
+            base_datos: true,
+          },
+        }),
+        prisma.tecnologias.count(),
+      ]);
+      res.json({ tecnologias, totalCount });
     } catch (error) {
       console.error('Error fetching tecnologias:', error);
       res.status(500).json({ error: 'An error occurred while fetching tecnologias.' });
@@ -33,7 +51,7 @@ module.exports = (prisma, authenticateToken) => {
   });
 
   // Create a new tecnologias entry
-  router.post('/', authenticateToken, async (req, res) => {
+  router.post('/', checkAdmin, async (req, res) => {
     const { error, value } = tecnologiasSchema.validate(req.body);
 
     if (error) {
@@ -52,11 +70,19 @@ module.exports = (prisma, authenticateToken) => {
   });
 
   // GET a single tecnologias entry by ID
-  router.get('/:id', authenticateToken, async (req, res) => {
+  router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
       const tecnologias = await prisma.tecnologias.findUnique({
         where: { id: parseInt(id, 10) },
+        include: {
+          proyecto: {
+            select: {
+              id: true,
+              titulo_proyecto: true,
+            },
+          },
+        },
       });
       if (tecnologias) {
         res.json(tecnologias);
@@ -70,7 +96,7 @@ module.exports = (prisma, authenticateToken) => {
   });
 
   // Update a tecnologias entry
-  router.put('/:id', authenticateToken, async (req, res) => {
+  router.put('/:id', checkAdmin, async (req, res) => {
     const { id } = req.params;
     const { error, value } = tecnologiasSchema.validate(req.body);
 
@@ -91,7 +117,7 @@ module.exports = (prisma, authenticateToken) => {
   });
 
   // Delete a tecnologias entry
-  router.delete('/:id', authenticateToken, async (req, res) => {
+  router.delete('/:id', checkAdmin, async (req, res) => {
     const { id } = req.params;
     try {
       await prisma.tecnologias.delete({

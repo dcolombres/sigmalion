@@ -28,50 +28,103 @@ const toggleSidebar = () => {
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="sidebar-header">
-        <img alt="Mecon logo" class="logo" src="/src/img/logo_mecon_ss_gestion_admin_produccion.svg" />
-        <img alt="Sigma logo" class="logo-collapsed" src="/src/img/logosigma.svg" />
+        <img
+          alt="Mecon logo"
+          class="logo"
+          src="/src/img/logo_mecon_ss_gestion_admin_produccion.svg"
+        >
+        <img
+          alt="Sigma logo"
+          class="logo-collapsed"
+          src="/src/img/logosigma.svg"
+        >
       </div>
       <div class="list-group">
-        <RouterLink to="/" class="list-group-item">
-          <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+        <RouterLink
+          to="/"
+          class="list-group-item"
+        >
+          <i class="fas fa-tachometer-alt" /> <span>Dashboard</span>
         </RouterLink>
-        <RouterLink to="/proyectos" class="list-group-item">
-          <i class="fas fa-project-diagram"></i> <span>Proyectos</span>
+        <RouterLink
+          to="/proyectos"
+          class="list-group-item"
+        >
+          <i class="fas fa-project-diagram" /> <span>Proyectos</span>
         </RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" to="/staff" class="list-group-item">
-          <i class="fas fa-users"></i> <span>Staff</span>
+        <RouterLink
+          to="/clientes"
+          class="list-group-item"
+        >
+          <i class="fas fa-address-book" /> <span>Clientes</span>
         </RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" to="/integraciones" class="list-group-item">
-          <i class="fas fa-puzzle-piece"></i> <span>Integraciones</span>
+        <RouterLink
+          v-if="authStore.isAuthenticated"
+          to="/staff"
+          class="list-group-item"
+        >
+          <i class="fas fa-users" /> <span>Staff</span>
         </RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" to="/users" class="list-group-item">
-          <i class="fas fa-user-shield"></i> <span>Usuarios</span>
+        <RouterLink
+          v-if="authStore.isAuthenticated"
+          to="/integraciones"
+          class="list-group-item"
+        >
+          <i class="fas fa-puzzle-piece" /> <span>Integraciones</span>
         </RouterLink>
-        <RouterLink v-if="authStore.isAuthenticated" to="/admin" class="list-group-item">
-          <i class="fas fa-file-import"></i> <span>Administración</span>
+        <RouterLink
+          v-if="authStore.isAdmin"
+          to="/users"
+          class="list-group-item"
+        >
+          <i class="fas fa-user-shield" /> <span>Usuarios</span>
+        </RouterLink>
+        <RouterLink
+          v-if="authStore.isAdmin"
+          to="/admin"
+          class="list-group-item"
+        >
+          <i class="fas fa-file-import" /> <span>Administración</span>
         </RouterLink>
       </div>
 
       <div class="sidebar-footer">
-        <div v-if="authStore.isAuthenticated" class="user-info">
+        <div
+          v-if="authStore.isAuthenticated"
+          class="user-info"
+        >
           <div class="user-details">
-            <i class="fas fa-user-circle fa-lg"></i>
+            <i class="fas fa-user-circle fa-lg" />
             <div class="user-text">
-              <div class="fw-bold">{{ authStore.user?.nombre || 'Usuario' }}</div>
+              <div class="fw-bold">
+                {{ authStore.user?.nombre || 'Usuario' }}
+              </div>
               <small class="text-muted">{{ authStore.user?.email || '' }}</small>
             </div>
           </div>
-          <button @click="handleLogout" class="btn-logout">
-            <i class="fas fa-sign-out-alt"></i>
+          <button
+            class="btn-logout"
+            @click="handleLogout"
+          >
+            <i class="fas fa-sign-out-alt" />
           </button>
         </div>
-        <div v-if="!authStore.isAuthenticated" class="auth-links">
-            <RouterLink to="/login" class="list-group-item">
-              <i class="fas fa-sign-in-alt"></i> <span>Login</span>
-            </RouterLink>
-            <RouterLink to="/register" class="list-group-item">
-              <i class="fas fa-user-plus"></i> <span>Register</span>
-            </RouterLink>
+        <div
+          v-if="!authStore.isAuthenticated"
+          class="auth-links"
+        >
+          <RouterLink
+            to="/login"
+            class="list-group-item"
+          >
+            <i class="fas fa-sign-in-alt" /> <span>Login</span>
+          </RouterLink>
+          <RouterLink
+            to="/register"
+            class="list-group-item"
+          >
+            <i class="fas fa-user-plus" /> <span>Register</span>
+          </RouterLink>
         </div>
       </div>
     </div>
@@ -79,14 +132,17 @@ const toggleSidebar = () => {
 
     <!-- Main Content -->
     <div class="main-content">
-        <nav class="navbar navbar-light bg-light">
-          <button class="btn btn-primary d-md-none" @click="toggleSidebar">
-            <i class="fas fa-bars"></i>
-          </button>
-        </nav>
-        <div class="container-fluid content-container">
-          <RouterView />
-        </div>
+      <nav class="navbar navbar-light bg-light">
+        <button
+          class="btn btn-primary d-md-none"
+          @click="toggleSidebar"
+        >
+          <i class="fas fa-bars" />
+        </button>
+      </nav>
+      <div class="container-fluid content-container">
+        <RouterView />
+      </div>
     </div>
   </div>
 
@@ -147,8 +203,8 @@ const toggleSidebar = () => {
 
 .list-group-item:hover,
 .router-link-exact-active {
-  background-color: #5FBFBD;
-  color: #fff;
+  background-color: var(--sidebar-active-color);
+  color: var(--sidebar-active-text-color);
 }
 
 .list-group-item i {
@@ -158,7 +214,7 @@ const toggleSidebar = () => {
 
 .sidebar-footer {
   padding: 1rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-color);
 }
 
 .user-info {
@@ -188,7 +244,7 @@ const toggleSidebar = () => {
 }
 
 .btn-logout:hover {
-  color: #5FBFBD;
+  color: var(--sidebar-active-color);
 }
 
 .auth-links {

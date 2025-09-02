@@ -1,0 +1,654 @@
+FORMAT: 1A
+HOST: http://localhost:3000/api
+
+# SIGMALION API Documentation
+
+Welcome to the API documentation for SIGMALION. This document provides details on all available endpoints.
+
+# Group Authentication
+
+API for user authentication.
+
+
+## auth/login [POST]
+
+Authenticates a user and returns a JWT token.
+
++ Request (application/json)
+
+        {
+            "email": "user@example.com",
+            "password": "string"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "token": "jwt.token.here",
+            "user": {
+                "id": 1,
+                "email": "user@example.com",
+                "nombre": "John",
+                "Apellido": "Doe",
+                "role": "USER"
+            }
+        }
+## auth/me [GET]
+
+Retrieves the profile of the currently authenticated user.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "email": "user@example.com",
+            "nombre": "John",
+            "Apellido": "Doe",
+            "role": "USER"
+        }
+# Group Users
+
+API for managing users.
+
+## users [GET]
+
+Retrieves a list of all users. Requires admin privileges.
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": 1,
+                "email": "user@example.com",
+                "nombre": "John",
+                "Apellido": "Doe",
+                "role": "USER"
+            }
+        ]
+## users [POST]
+
+Creates a new user.
+
++ Request (application/json)
+
+        {
+            "nombre": "Jane",
+            "Apellido": "Doe",
+            "email": "jane.doe@example.com",
+            "password": "securepassword",
+            "role": "ADMIN"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 2,
+            "email": "jane.doe@example.com",
+            "nombre": "Jane",
+            "Apellido": "Doe",
+            "role": "ADMIN"
+        }
+## users/{id} [GET]
+
+Retrieves a single user by their ID. Requires admin privileges.
+
++ Parameters
+    + id (number, required) - The ID of the user.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "email": "user@example.com",
+            "nombre": "John",
+            "Apellido": "Doe",
+            "role": "USER"
+        }
+## users/{id} [PUT]
+
+Updates an existing user. Requires admin privileges.
+
++ Parameters
+    + id (number, required) - The ID of the user.
+
++ Request (application/json)
+
+        {
+            "nombre": "John Updated"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "email": "user@example.com",
+            "nombre": "John Updated",
+            "Apellido": "Doe",
+            "role": "USER"
+        }
+## users/{id} [DELETE]
+
+Deletes a user by its ID. Requires admin privileges.
+
++ Parameters
+    + id (number, required) - The ID of the user.
+
++ Response 204
+# Group Proyectos
+
+API for managing projects.
+
+## proyectos/enums [GET]
+
+Retrieves all enum values defined in the `schema.prisma` file.
+
++ Response 200 (application/json)
+
+        {
+            "CategoriaProyecto": [],
+            "RolStaff": []
+        }
+## proyectos{?page,pageSize,search,sortKey,sortOrder} [GET]
+
+Retrieves a paginated list of projects.
+
++ Parameters
+    + page: `1` (number, optional) - Page number.
+    + pageSize: `10` (number, optional) - Items per page.
+    + search: `term` (string, optional) - Search term.
+    + sortKey: `id` (string, optional) - Field to sort by.
+    + sortOrder: `asc` (string, optional) - Sort order (`asc` or `desc`).
+
++ Response 200 (application/json)
+
+        {
+            "proyectos": [],
+            "totalCount": 0
+        }
+## proyectos [POST]
+
+Creates a new project.
+
++ Request (application/json)
+
+        {
+            "titulo_proyecto": "New Project"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "titulo_proyecto": "New Project"
+        }
+## proyectos/{id} [GET]
+
+Retrieves a single project by its ID.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "titulo_proyecto": "Project Title"
+        }
+## proyectos/{id} [PUT]
+
+Updates an existing project.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+
++ Request (application/json)
+
+        {
+            "titulo_proyecto": "Updated Title"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "titulo_proyecto": "Updated Title"
+        }
+## proyectos/{id} [DELETE]
+
+Deletes a project by its ID.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+
++ Response 204
+## proyectos/{id}/cliente [PUT]
+
+Creates or updates the client details for a project.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+
++ Request (application/json)
+
+        {
+            "cliente": "New Client Name"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "cliente": "New Client Name"
+        }
+## proyectos/{id}/staff [POST]
+
+Assigns a staff member to a project.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+
++ Request (application/json)
+
+        {
+            "staffId": 123
+        }
+
++ Response 204
+## proyectos/{id}/staff/{staffId} [DELETE]
+
+Removes a staff member from a project.
+
++ Parameters
+    + id (number, required) - The ID of the project.
+    + staffId (number, required) - The ID of the staff member.
+
++ Response 204
+# Group Staff
+
+API for managing staff members.
+
+## staff{?search,page,pageSize} [GET]
+
+Retrieves a paginated list of staff members.
+
++ Parameters
+    + search: `John` (string, optional) - Search term.
+    + page: `1` (number, optional) - Page number.
+    + pageSize: `10` (number, optional) - Items per page.
+
++ Response 200 (application/json)
+
+        {
+            "staff": [],
+            "totalCount": 0
+        }
+## staff [POST]
+
+Creates a new staff member.
+
++ Request (application/json)
+
+        {
+            "nombre_completo": "John Doe"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "nombre_completo": "John Doe"
+        }
+## staff/{id} [GET]
+
+Retrieves a single staff member by ID.
+
++ Parameters
+    + id (number, required) - The ID of the staff member.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "nombre_completo": "John Doe"
+        }
+## staff/{id} [PUT]
+
+Updates a staff member.
+
++ Parameters
+    + id (number, required) - The ID of the staff member.
+
++ Request (application/json)
+
+        {
+            "nombre_completo": "Johnathan Doe"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "nombre_completo": "Johnathan Doe"
+        }
+## staff/{id} [DELETE]
+
+Deletes a staff member.
+
++ Parameters
+    + id (number, required) - The ID of the staff member.
+
++ Response 204
+# Group Clientes
+
+API for managing clients.
+
+## clientes{?search,page,pageSize} [GET]
+
+Retrieves a paginated list of clients.
+
++ Parameters
+    + search: `Client` (string, optional) - Search term.
+    + page: `1` (number, optional) - Page number.
+    + pageSize: `10` (number, optional) - Items per page.
+
++ Response 200 (application/json)
+
+        {
+            "clientes": [],
+            "totalCount": 0
+        }
+## clientes [POST]
+
+Creates a new client.
+
++ Request (application/json)
+
+        {
+            "cliente": "New Client"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "cliente": "New Client"
+        }
+## clientes/{id} [GET]
+
+Retrieves a single client by ID.
+
++ Parameters
+    + id (number, required) - The ID of the client.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "cliente": "Client Name"
+        }
+## clientes/{id} [PUT]
+
+Updates a client.
+
++ Parameters
+    + id (number, required) - The ID of the client.
+
++ Request (application/json)
+
+        {
+            "cliente": "Updated Client Name"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "cliente": "Updated Client Name"
+        }
+## clientes/{id} [DELETE]
+
+Deletes a client.
+
++ Parameters
+    + id (number, required) - The ID of the client.
+
++ Response 204
+# Group Dashboard
+
+API for retrieving aggregated dashboard data.
+
+## dashboard/counts [GET]
+
+Retrieves total counts for projects, staff, clients, and integrations.
+
++ Response 200 (application/json)
+
+        {
+            "totalProjects": 0,
+            "totalStaff": 0,
+            "totalClients": 0,
+            "totalIntegrations": 0
+        }
+## dashboard/data-types [GET]
+
+Retrieves the list of available data types for creating dashboard charts.
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id": "projects-by-category",
+                "name": "Proyectos por Categoría"
+            }
+        ]
+# Group Dashboard Config
+
+API for managing the configuration of dashboard charts.
+
+## dashboard-config [GET]
+
+Retrieves all saved dashboard chart configurations.
+
++ Response 200 (application/json)
+
+        []
+## dashboard-config [POST]
+
+Creates a new chart configuration.
+
++ Request (application/json)
+
+        {
+            "title": "My Chart",
+            "chartType": "bar",
+            "dataType": "projects-by-category"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "title": "My Chart",
+            "chartType": "bar",
+            "dataType": "projects-by-category",
+            "order": 0,
+            "enabled": true
+        }
+## dashboard-config/{id} [PUT]
+
+Updates an existing chart configuration.
+
++ Parameters
+    + id (number, required) - The ID of the chart configuration.
+
++ Request (application/json)
+
+        {
+            "enabled": false
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "enabled": false
+        }
+## "dashboard-config/{id}" [DELETE]
+
+Deletes a chart configuration by its ID.
+
++ Parameters
+    + id (number, required) - The ID of the chart configuration.
+
++ Response 204
+# Group Integraciones
+
+API for managing integrations.
+
+## integraciones{?search,page,pageSize} [GET]
+
+Retrieves a paginated list of integrations.
+
++ Parameters
+    + search: `API` (string, optional) - Search term.
+    + page: `1` (number, optional) - Page number.
+    + pageSize: `10` (number, optional) - Items per page.
+
++ Response 200 (application/json)
+
+        {
+            "integraciones": [],
+            "totalCount": 0
+        }
+## integraciones [POST]
+
+Creates a new integration.
+
++ Request (application/json)
+
+        {
+            "nombre": "New Integration"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "nombre": "New Integration"
+        }
+## integraciones/{id} [GET]
+
+Retrieves a single integration by ID.
+
++ Parameters
+    + id (number, required) - The ID of the integration.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "nombre": "Integration Name"
+        }
+## integraciones/{id} [PUT]
+
+Updates an integration.
+
++ Parameters
+    + id (number, required) - The ID of the integration.
+
++ Request (application/json)
+
+        {
+            "nombre": "Updated Name"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "nombre": "Updated Name"
+        }
+## integraciones/{id} [DELETE]
+
+Deletes an integration.
+
++ Parameters
+    + id (number, required) - The ID of the integration.
+
++ Response 204
+# Group Tecnologias
+
+API for managing technologies.
+
+## tecnologias{?page,pageSize} [GET]
+
+Retrieves a paginated list of technology entries.
+
++ Parameters
+    + page: `1` (number, optional) - Page number.
+    + pageSize: `10` (number, optional) - Items per page.
+
++ Response 200 (application/json)
+
+        {
+            "tecnologias": [],
+            "totalCount": 0
+        }
+## tecnologias [POST]
+
+Creates a new technology entry.
+
++ Request (application/json)
+
+        {
+            "proyecto_id": 1,
+            "lenguaje_desarrollo": "JavaScript"
+        }
+
++ Response 201 (application/json)
+
+        {
+            "id": 1,
+            "proyecto_id": 1,
+            "lenguaje_desarrollo": "JavaScript"
+        }
+## tecnologias/{id} [GET]
+
+Retrieves a single technology entry by ID.
+
++ Parameters
+    + id (number, required) - The ID of the technology entry.
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "lenguaje_desarrollo": "JavaScript"
+        }
+## tecnologias/{id} [PUT]
+
+Updates a technology entry.
+
++ Parameters
+    + id (number, required) - The ID of the technology entry.
+
++ Request (application/json)
+
+        {
+            "base_datos": "PostgreSQL"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "id": 1,
+            "base_datos": "PostgreSQL"
+        }
+## tecnologias/{id} [DELETE]
+
+Deletes a technology entry.
+
++ Parameters
+    + id (number, required) - The ID of the technology entry.
+
++ Response 204

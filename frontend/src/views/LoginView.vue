@@ -15,7 +15,7 @@ const handleLogin = async () => {
     await authStore.login(email.value, password.value);
     router.push('/'); // Redirect to home or dashboard
   } catch (error) {
-    errorMessage.value = error.response?.data?.error || 'Login failed. Please check your credentials.';
+    errorMessage.value = error.response?.data?.error || 'Login incorrecto. Verificá las credenciales.';
   }
 };
 </script>
@@ -25,28 +25,62 @@ const handleLogin = async () => {
     <div class="auth-card card">
       <div class="card-body">
         <div class="text-center mb-4">
-          <img src="/src/img/logosigma.svg" alt="SIGMA Logo" width="150" />
-          <h2 class="mt-3">Login</h2>
+          <img
+            src="/src/img/logosigma.svg"
+            alt="SIGMA Logo"
+            width="100"
+          >
+          
         </div>
         <form @submit.prevent="handleLogin">
           <div class="form-group mb-3">
             <label for="email">Email</label>
             <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-              <input type="email" id="email" class="form-control" v-model="email" required placeholder="Enter your email">
+              <span class="input-group-text"><i class="fas fa-envelope" /></span>
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                class="form-control"
+                required
+                placeholder="Enter your email"
+              >
             </div>
           </div>
           <div class="form-group mb-4">
             <label for="password">Password</label>
             <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-lock"></i></span>
-              <input type="password" id="password" class="form-control" v-model="password" required placeholder="Enter your password">
+              <span class="input-group-text"><i class="fas fa-lock" /></span>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                class="form-control"
+                required
+                placeholder="Enter your password"
+              >
             </div>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Login</button>
-          <p v-if="errorMessage" class="error-message mt-3">{{ errorMessage }}</p>
+          <button
+            type="submit"
+            class="btn btn-primary w-100"
+          >
+            Login
+          </button>
+          <p
+            v-if="errorMessage"
+            class="error-message mt-3"
+          >
+            {{ errorMessage }}
+          </p>
         </form>
-        <p class="text-center mt-4">Don't have an account? <RouterLink to="/register">Register here</RouterLink></p>
+        <p class="text-center mt-4">
+           <p>
+            SIGMALION <br></br>Sistema Integral de Gestión y Monitoreo de Activos
+          </p><RouterLink to="/register">
+            Registro
+          </RouterLink>
+        </p>
       </div>
     </div>
   </div>

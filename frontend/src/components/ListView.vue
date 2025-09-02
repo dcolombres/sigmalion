@@ -1,144 +1,112 @@
 <template>
-  <div class="list-view">
-    <header class="list-header">
-      <h1>{{ title }}</h1>
-      <button @click="$emit('show-form')" class="btn btn-primary">
-        <i class="fas fa-plus me-2"></i>
-        Añadir {{ itemType }}
-      </button>
-    </header>
-
-    <div v-if="showForm" class="card p-4 mb-4">
-      <h2 class="card-title">{{ formTitle }}</h2>
-      <form @submit.prevent="$emit('submit-form')">
-        <slot name="form"></slot>
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <button type="button" @click="$emit('cancel-form')" class="btn btn-secondary ms-2">Cancelar</button>
-      </form>
-    </div>
-
+  <div class="list-view-container">
     <div class="card">
-        <div class="card-header">
-            <input type="text" :value="searchQuery" @input="$emit('update:searchQuery', $event.target.value)" :placeholder="searchPlaceholder" class="form-control">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title mb-0">{{ title }}</h2>
+        <div class="d-flex align-items-center">
+          <input
+            type="text"
+            class="form-control form-control-sm me-2"
+            placeholder="Buscar..."
+            :value="searchQuery"
+            @input="$emit('update:searchQuery', $event.target.value)"
+          />
+          <slot name="actions"></slot>
         </div>
-        <div class="card-body">
-            <div v-if="isLoading" class="loading-container">
-              <div class="spinner-border text-primary" role="status"></div>
-              <p>Cargando...</p>
-            </div>
-            <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
-            <div v-else-if="items.length" class="table-responsive">
-              <table class="table table-hover mb-0">
-                <thead>
-                  <tr>
-                    <th v-for="header in tableHeaders" :key="header.key" @click="$emit('sort', header.key)" :class="{ sortable: header.sortable }">
-                      {{ header.label }}
-                      <i v-if="header.sortable" :class="getSortIcon(header.key)"></i>
-                    </th>
-                    <th class="text-end">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="item in items" :key="item.id">
-                    <td v-for="field in displayFields" :key="field.key" :class="{ 'truncate-text': field.truncate }">
-                      <span v-if="field.truncate">{{ truncateText(item[field.key], field.truncate) }}</span>
-                      <span v-else>{{ item[field.key] || 'N/A' }}</span>
-                    </td>
-                    <td class="text-end">
-                      <RouterLink :to="{ name: detailRouteName, params: { id: item.id } }" class="btn btn-sm btn-primary me-2">
-                        <i class="fas fa-eye"></i>
-                      </RouterLink>
-                      <button @click="$emit('delete-item', item.id)" class="btn btn-sm btn-danger">
-                        <i class="fas fa-trash"></i>
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div v-else class="text-muted text-center py-3">
-              No hay {{ itemType.toLowerCase() }} que coincidan con la búsqueda.
-            </div>
+      </div>
+      <div class="card-body">
+        <div v-if="loading" class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-        <div class="card-footer d-flex justify-content-center align-items-center">
-            <button @click="$emit('prev-page')" :disabled="currentPage === 1" class="btn btn-secondary me-2">Anterior</button>
-            <span>Página {{ currentPage }} de {{ totalPages }}</span>
-            <button @click="$emit('next-page')" :disabled="currentPage === totalPages" class="btn btn-secondary ms-2">Siguiente</button>
+        <div v-else-if="items.length === 0" class="text-center text-muted">
+          No se encontraron resultados.
         </div>
+        <div v-else class="table-responsive">
+          <table class="table table-hover table-striped">
+            <thead>
+              <tr>
+                <th 
+                  v-for="column in columns" 
+                  :key="column.key"
+                  @click="column.sortable && $emit('update:sort', column.key)"
+                  :class="{ 'sortable': column.sortable }"
+                >
+                  {{ column.label }}
+                  <i v-if="column.sortable && sortKey === column.key" :class="['fas', sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down']"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in items" :key="item.id">
+                <slot name="item" :item="item"></slot>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+          <span class="me-2">Registros por página:</span>
+          <select
+            class="form-select form-select-sm"
+            style="width: 70px;"
+            :value="pageSize"
+            @change="$emit('update:pageSize', parseInt($event.target.value))"
+          >
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span class="ms-3 text-muted">
+            Mostrando {{ (currentPage - 1) * pageSize + 1 }} - {{ Math.min(currentPage * pageSize, totalItems) }} de {{ totalItems }}
+          </span>
+        </div>
+        <nav>
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+              <a class="page-link" href="#" @click.prevent="$emit('prev-page')">Anterior</a>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage * pageSize >= totalItems }">
+              <a class="page-link" href="#" @click.prevent="$emit('next-page')">Siguiente</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
-
-const props = defineProps({
-  title: String,
-  itemType: String,
-  items: Array,
-  tableHeaders: Array,
-  displayFields: Array,
-  searchQuery: String,
-  searchPlaceholder: String,
-  isLoading: Boolean,
-  error: String,
-  currentPage: Number,
-  totalPages: Number,
-  showForm: Boolean,
-  formTitle: String,
-  detailRouteName: String,
-  sortKey: String,
-  sortOrder: String,
+defineProps({
+  items: { type: Array, required: true },
+  columns: { type: Array, required: true },
+  title: { type: String, required: true },
+  searchQuery: { type: String, default: '' },
+  loading: { type: Boolean, default: false },
+  totalItems: { type: Number, required: true },
+  pageSize: { type: Number, required: true },
+  currentPage: { type: Number, required: true },
+  sortKey: { type: String, required: true },
+  sortOrder: { type: String, required: true },
 });
 
-defineEmits([
-  'show-form',
-  'submit-form',
-  'cancel-form',
-  'update:searchQuery',
-  'prev-page',
-  'next-page',
-  'delete-item',
-  'sort',
-]);
-
-const truncateText = (text, length) => {
-  if (text && text.length > length) {
-    return text.substring(0, length) + '...';
-  }
-  return text;
-};
-
-const getSortIcon = (key) => {
-  if (props.sortKey !== key) return 'fas fa-sort';
-  if (props.sortOrder === 'asc') return 'fas fa-sort-up';
-  return 'fas fa-sort-down';
-};
-
+defineEmits(['update:searchQuery', 'update:sort', 'update:pageSize', 'prev-page', 'next-page']);
 </script>
 
 <style scoped>
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+.list-view-container {
+  padding: 1rem;
 }
-
-.loading-container {
-  text-align: center;
-  padding: 4rem;
+.card-title {
+  font-size: 1.5rem;
 }
-
 .sortable {
   cursor: pointer;
 }
-
-.truncate-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 200px; /* Adjust as needed */
+.sortable:hover {
+  background-color: #f8f9fa;
 }
 </style>
-

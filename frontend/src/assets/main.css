@@ -8,7 +8,16 @@
   --card-background-color: #ffffff;
   --sidebar-background-color: #ffffff;
   --sidebar-text-color: #555;
-  --sidebar-active-color: #4a90e2;
+  --sidebar-active-color: #5FBFBD;
+  --border-color: #e0e0e0;
+  --sidebar-active-text-color: #fff;
+  --status-activo-bg: #28a745;
+  --status-inactivo-bg: #dc3545;
+  --status-en-desarrollo-bg: #ffc107;
+  --status-mantenimiento-bg: #17a2b8;
+  --status-en-desarrollo-text: #333;
+  --nav-tabs-active-bg: #f8f9fa;
+  --nav-tabs-active-border: #007bff;
 }
 
 body {
@@ -50,7 +59,7 @@ a:hover {
 
 .card-header {
   background-color: transparent;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
   font-weight: 600;
   padding: 1.5rem;
   font-size: 1.2rem;

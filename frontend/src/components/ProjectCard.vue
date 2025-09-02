@@ -2,17 +2,38 @@
   <div class="col-md-4 mb-4">
     <div class="card h-100 shadow-sm">
       <div class="card-body d-flex flex-column">
-        <h5 class="card-title text-primary">{{ proyecto.titulo_proyecto }}</h5>
-        <h6 class="card-subtitle mb-2 text-muted">ID: {{ proyecto.id }}</h6>
-        <p class="card-text flex-grow-1">{{ proyecto.storyline }}</p>
+        <h5 class="card-title text-primary">
+          {{ proyecto.titulo_proyecto }}
+        </h5>
+        <h6 class="card-subtitle mb-2 text-muted">
+          ID: {{ proyecto.id }}
+        </h6>
+        <p class="card-text flex-grow-1">
+          {{ proyecto.storyline }}
+        </p>
         <div class="d-flex justify-content-between align-items-center mt-auto">
           <span :class="['badge', proyecto.proyecto_activo ? 'bg-success' : 'bg-danger']">
             {{ proyecto.proyecto_activo ? 'Activo' : 'Inactivo' }}
           </span>
           <div>
-            <RouterLink :to="{ name: 'project-detail', params: { id: proyecto.id } }" class="btn btn-sm btn-info me-2">Ver</RouterLink>
-            <button class="btn btn-sm btn-warning me-2" @click="$emit('edit', proyecto)">Editar</button>
-            <button class="btn btn-sm btn-danger" @click="$emit('delete', proyecto.id)">Borrar</button>
+            <RouterLink
+              :to="{ name: 'project-detail', params: { id: proyecto.id } }"
+              class="btn btn-sm btn-info me-2"
+            >
+              Ver
+            </RouterLink>
+            <button
+              class="btn btn-sm btn-warning me-2"
+              @click="$emit('edit', proyecto)"
+            >
+              Editar
+            </button>
+            <button
+              class="btn btn-sm btn-danger"
+              @click="$emit('delete', proyecto.id)"
+            >
+              Borrar
+            </button>
           </div>
         </div>
       </div>

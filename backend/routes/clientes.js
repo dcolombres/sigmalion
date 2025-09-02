@@ -1,7 +1,8 @@
 const express = require('express');
 const Joi = require('joi');
+const { checkAdmin } = require('../middleware/rbac');
 
-module.exports = (prisma, authenticateToken) => {
+module.exports = (prisma) => {
   const router = express.Router();
 
   const estadoProyectoEnumValues = ['Activo', 'Inactivo', 'En_Desarrollo', 'Mantenimiento'];
@@ -21,19 +22,132 @@ module.exports = (prisma, authenticateToken) => {
     uso_interno_equipo_desarrollo: Joi.boolean().allow(null),
   });
 
-  // Obtener todos los clientes
-  router.get('/', authenticateToken, async (req, res) => {
+  /**
+   * @swagger
+   * tags:
+   *   name: Clientes
+   *   description: API for managing clients
+   */
+
+  /**
+   * @swagger
+   * /clientes:
+   *   get:
+   *     summary: Get all clients with search and pagination
+   *     tags: [Clientes]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: search
+   *         schema:
+   *           type: string
+   *         description: Search term for client name
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *         description: Page number
+   *       - in: query
+   *         name: pageSize
+   *         schema:
+   *           type: integer
+   *           default: 10
+   *         description: Number of items per page
+   *     responses:
+   *       200:
+   *         description: A list of clients
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 clientes:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/ClienteSummary'
+   *                 totalCount:
+   *                   type: integer
+   *       401:
+   *         description: Unauthorized, no token or invalid token
+   *       500:
+   *         description: Internal server error
+   */
+  // Obtener todos los clientes con búsqueda y paginación
+  router.get('/', async (req, res) => {
+    const { search, page, pageSize } = req.query;
+    const take = parseInt(pageSize, 10) || 10; // Tamaño de página por defecto: 10
+    const skip = (parseInt(page, 10) - 1) * take || 0; // Por defecto, primera página
+
+    let where = {};
+    if (search) {
+      where = {
+        OR: [
+          { cliente: { contains: search } },
+          { nombre_publico: { contains: search } },
+          { nombre_interno: { contains: search } },
+        ],
+      };
+    }
+
     try {
-      const clientes = await prisma.cliente.findMany();
-      res.json(clientes);
+      const [clientes, totalCount] = await prisma.$transaction([
+        prisma.cliente.findMany({
+          where,
+          skip,
+          take,
+          select: {
+            id: true,
+            cliente: true,
+            nombre_publico: true,
+            nombre_interno: true,
+            tipo: true,
+            estado: true,
+            fecha_inicio_desarrollo: true,
+          },
+        }),
+        prisma.cliente.count({ where }),
+      ]);
+      res.json({ clientes, totalCount });
     } catch (error) {
       console.error('Error fetching clientes:', error);
       res.status(500).json({ error: 'An error occurred while fetching clientes.' });
     }
   });
 
+  /**
+   * @swagger
+   * /clientes:
+   *   post:
+   *     summary: Create a new client
+   *     tags: [Clientes]
+   *     security:
+   *       - bearerAuth: []
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/ClienteCreate'
+   *     responses:
+   *       201:
+   *         description: Client created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Cliente'
+   *       400:
+   *         description: Bad request, validation error
+   *       401:
+   *         description: Unauthorized, no token or invalid token
+   *       403:
+   *         description: Forbidden, user not an admin
+   *       500:
+   *         description: Internal server error
+   */
   // Crear un nuevo cliente
-  router.post('/', authenticateToken, async (req, res) => {
+  router.post('/', checkAdmin, async (req, res) => {
     const { error, value } = clienteSchema.validate(req.body);
 
     if (error) {
@@ -51,12 +165,49 @@ module.exports = (prisma, authenticateToken) => {
     }
   });
 
+  /**
+   * @swagger
+   * /clientes/{id}:
+   *   get:
+   *     summary: Get a single client by ID
+   *     tags: [Clientes]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         required: true
+   *         description: Client ID
+   *     responses:
+   *       200:
+   *         description: Client details
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Cliente'
+   *       401:
+   *         description: Unauthorized, no token or invalid token
+   *       404:
+   *         description: Client not found
+   *       500:
+   *         description: Internal server error
+   */
   // Obtener un cliente por ID
-  router.get('/:id', authenticateToken, async (req, res) => {
+  router.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
       const cliente = await prisma.cliente.findUnique({
         where: { id: parseInt(id, 10) },
+        include: {
+          proyectos: {
+            select: {
+              id: true,
+              titulo_proyecto: true,
+            },
+          },
+        },
       });
       if (cliente) {
         res.json(cliente);
@@ -69,8 +220,47 @@ module.exports = (prisma, authenticateToken) => {
     }
   });
 
+  /**
+   * @swagger
+   * /clientes/{id}:
+   *   put:
+   *     summary: Update a client by ID
+   *     tags: [Clientes]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         required: true
+   *         description: Client ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/ClienteUpdate'
+   *     responses:
+   *       200:
+   *         description: Client updated successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/Cliente'
+   *       400:
+   *         description: Bad request, validation error
+   *       401:
+   *         description: Unauthorized, no token or invalid token
+   *       403:
+   *         description: Forbidden, user not an admin
+   *       404:
+   *         description: Client not found
+   *       500:
+   *         description: Internal server error
+   */
   // Actualizar un cliente
-  router.put('/:id', authenticateToken, async (req, res) => {
+  router.put('/:id', checkAdmin, async (req, res) => {
     const { id } = req.params;
     const { error, value } = clienteSchema.validate(req.body);
 
@@ -90,8 +280,35 @@ module.exports = (prisma, authenticateToken) => {
     }
   });
 
+  /**
+   * @swagger
+   * /clientes/{id}:
+   *   delete:
+   *     summary: Delete a client by ID
+   *     tags: [Clientes]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         schema:
+   *           type: integer
+   *         required: true
+   *         description: Client ID
+   *     responses:
+   *       204:
+   *         description: Client deleted successfully
+   *       401:
+   *         description: Unauthorized, no token or invalid token
+   *       403:
+   *         description: Forbidden, user not an admin
+   *       404:
+   *         description: Client not found
+   *       500:
+   *         description: Internal server error
+   */
   // Eliminar un cliente
-  router.delete('/:id', authenticateToken, async (req, res) => {
+  router.delete('/:id', checkAdmin, async (req, res) => {
     const { id } = req.params;
     try {
       await prisma.cliente.delete({

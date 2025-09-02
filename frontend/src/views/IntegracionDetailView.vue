@@ -1,84 +1,3 @@
-<script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
-import MarkdownIt from 'markdown-it';
-
-const md = new MarkdownIt();
-
-const route = useRoute();
-const router = useRouter();
-const integracion = ref(null);
-const isLoading = ref(true);
-const error = ref(null);
-
-const isEditing = ref(false);
-const formData = ref({});
-
-const API_URL = 'http://localhost:3000/api/integraciones';
-
-const fetchIntegracion = async () => {
-  const integracionId = route.params.id;
-  isLoading.value = true;
-  try {
-    const response = await axios.get(`${API_URL}/${integracionId}`);
-    integracion.value = response.data;
-    formData.value = { ...integracion.value };
-  } catch (err) {
-    console.error('Error fetching integracion:', err);
-    error.value = `Failed to load integracion #${integracionId}.`;
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const saveIntegracion = async () => {
-  const integracionId = route.params.id;
-  try {
-    const response = await axios.put(`${API_URL}/${integracionId}`, formData.value);
-    integracion.value = response.data;
-    isEditing.value = false;
-  } catch (err) {
-    console.error('Error saving integracion:', err);
-    alert('Failed to save integracion details.');
-  }
-};
-
-const deleteIntegracion = async () => {
-  if (!confirm('¿Estás seguro de que quieres borrar esta integración?')) {
-    return;
-  }
-  const integracionId = route.params.id;
-  try {
-    await axios.delete(`${API_URL}/${integracionId}`);
-    router.push('/integraciones'); // Redirect to integrations list after deletion
-  } catch (err) {
-    console.error('Error deleting integracion:', err);
-    alert('Failed to delete integracion.');
-  }
-};
-
-const handleEdit = () => {
-  isEditing.value = true;
-};
-
-const handleCancelEdit = () => {
-  isEditing.value = false;
-  formData.value = { ...integracion.value }; // Reset form data
-};
-
-const renderedDetails = computed(() => {
-  if (integracion.value && integracion.value.detalles) {
-    return md.render(integracion.value.detalles);
-  }
-  return 'No hay detalles disponibles.';
-});
-
-onMounted(() => {
-  fetchIntegracion();
-});
-</script>
-
 <template>
   <main class="container mt-4">
     <div v-if="isLoading" class="text-center my-4">
@@ -92,42 +11,178 @@ onMounted(() => {
     </div>
     <div v-else-if="integracion" class="card p-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="card-title">{{ integracion.nombre }}</h1>
-        <RouterLink to="/integraciones" class="btn btn-secondary">&larr; Volver a la lista de Integraciones</RouterLink>
+        <h1 class="card-title">
+          {{ integracion.nombre }}
+        </h1>
+        <RouterLink to="/integraciones" class="btn btn-secondary">
+          &larr; Volver a la lista de Integraciones
+        </RouterLink>
       </div>
 
-      <div class="d-flex mb-3">
-        <button v-if="!isEditing" @click="handleEdit" class="btn btn-primary me-2">Editar Integración</button>
-        <button class="btn btn-danger" @click="deleteIntegracion">Borrar Integración</button>
-      </div>
-
-      <div class="card-body">
-        <h2 class="card-subtitle mb-3 text-muted">Detalles de la Integración</h2>
-        <form v-if="isEditing" @submit.prevent="saveIntegracion">
-          <div class="mb-3">
-            <label class="form-label">Nombre:</label>
-            <input type="text" v-model="formData.nombre" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Detalles (Markdown):</label>
-            <textarea v-model="formData.detalles" class="form-control" rows="10"></textarea>
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success me-2">Guardar Cambios</button>
-            <button type="button" @click="handleCancelEdit" class="btn btn-secondary">Cancelar</button>
-          </div>
-        </form>
-        <div v-else>
-          <p class="card-text"><strong>ID:</strong> {{ integracion.id }}</p>
-          <p class="card-text"><strong>Nombre:</strong> {{ integracion.nombre }}</p>
-          <div class="card-text"><strong>Detalles:</strong></div>
-          <div v-html="renderedDetails"></div>
+      <div class="row g-4">
+        <div class="col-md-12">
+          <EditableDetailCard
+            title="Detalles de la Integración"
+            :data="integracion"
+            :fields="integracionFields"
+            :form-fields="integracionFormFields"
+            @save="updateIntegracion"
+          />
+        </div>
+        <div class="col-md-12">
+          <AssignedListCard
+            title="Proyectos Asignados"
+            item-type="Proyecto"
+            :assigned-items="integracion.proyectos"
+            :all-items="allProjects"
+            name-field="titulo_proyecto"
+            :table-headers="['ID', 'Título del Proyecto']"
+            :display-fields="[{ key: 'id', label: 'ID' }, { key: 'titulo_proyecto', label: 'Título del Proyecto' }]"
+            @add="addProjectToIntegracion"
+            @remove="removeProjectFromIntegracion"
+          />
         </div>
       </div>
     </div>
   </main>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import { useNotificationStore } from '@/stores/notification';
+import EditableDetailCard from '@/components/EditableDetailCard.vue';
+import AssignedListCard from '@/components/AssignedListCard.vue';
+import { useAuthStore } from '@/stores/auth';
+
+const route = useRoute();
+const router = useRouter();
+const integracion = ref(null);
+const isLoading = ref(true);
+const error = ref(null);
+
+const notificationStore = useNotificationStore();
+const authStore = useAuthStore();
+const API_BASE_URL = 'http://localhost:3000/api';
+
+const allProjects = ref([]);
+
+const integracionFields = [
+  { key: 'id', label: 'ID' },
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'detalles', label: 'Detalles' },
+];
+
+const integracionFormFields = [
+  { key: 'nombre', label: 'Nombre', type: 'text', required: true },
+  { key: 'detalles', label: 'Detalles', type: 'textarea' },
+];
+
+const fetchIntegracionDetails = async () => {
+  const integracionId = route.params.id;
+  isLoading.value = true;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.get(`${API_BASE_URL}/integraciones/${integracionId}`, { headers });
+    integracion.value = response.data;
+  } catch (err) {
+    console.error('Error fetching integracion:', err);
+    error.value = `Failed to load integracion #${integracionId}.`;
+    notificationStore.showNotification(`Error al cargar integración #${integracionId}.`, 'error');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const updateIntegracion = async (updatedData) => {
+  const integracionId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.put(`${API_BASE_URL}/integraciones/${integracionId}`, updatedData, { headers });
+    integracion.value = response.data; // Update local data with response
+    notificationStore.showNotification('Integración actualizada exitosamente.', 'success');
+  } catch (err) {
+    console.error('Error saving integracion:', err);
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al guardar los detalles de la integración.', 'error');
+  }
+};
+
+const deleteIntegracion = async () => {
+  if (!confirm('¿Estás seguro de que quieres borrar esta integración?')) {
+    return;
+  }
+  const integracionId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.delete(`${API_BASE_URL}/integraciones/${integracionId}`, { headers });
+    notificationStore.showNotification('Integración eliminada exitosamente.', 'success');
+    router.push('/integraciones'); // Redirect to integrations list after deletion
+  } catch (err) {
+    console.error('Error deleting integracion:', err);
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al eliminar la integración.', 'error');
+  }
+};
+
+const fetchAllProjects = async () => {
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.get(`${API_BASE_URL}/proyectos`, { headers });
+    allProjects.value = response.data.proyectos;
+  } catch (err) {
+    notificationStore.showNotification('Error al cargar proyectos disponibles.', 'error');
+    console.error('Error fetching all projects:', err);
+  }
+};
+
+const addProjectToIntegracion = async (projectId) => {
+  const integracionId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.post(`${API_BASE_URL}/proyectos/${projectId}/integraciones`, { integracionId: parseInt(integracionId) }, { headers });
+    await fetchIntegracionDetails(); // Re-fetch integration to update assigned projects
+    notificationStore.showNotification('Proyecto asignado exitosamente.', 'success');
+  } catch (err) {
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al asignar el proyecto.', 'error');
+    console.error('Error adding project to integration:', err);
+  }
+};
+
+const removeProjectFromIntegracion = async (projectId) => {
+  if (!confirm('¿Quitar este proyecto de la integración?')) return;
+  const integracionId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.delete(`${API_BASE_URL}/proyectos/${projectId}/integraciones/${integracionId}`, { headers });
+    await fetchIntegracionDetails(); // Re-fetch integration to update assigned projects
+    notificationStore.showNotification('Proyecto quitado exitosamente.', 'success');
+  } catch (err) {
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al quitar el proyecto.', 'error');
+    console.error('Error removing project from integration:', err);
+  }
+};
+
+onMounted(async () => {
+  await fetchIntegracionDetails();
+  await fetchAllProjects();
+});
+
+</script>
+
 <style scoped>
-/* Removed most styles, Bootstrap will handle it */
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.tabs-card .nav-link {
+  cursor: pointer;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 4rem;
+}
 </style>

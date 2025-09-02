@@ -3,18 +3,16 @@ const { Parser } = require('json2csv');
 const multer = require('multer');
 const csv = require('csv-parser');
 const fs = require('fs');
+const { checkAdmin } = require('../middleware/rbac');
 
 // Configurar multer para guardar archivos subidos en una carpeta 'uploads'
 const upload = multer({ dest: 'uploads/' });
 
-function adminRoutes(prisma, authenticateToken) {
+function adminRoutes(prisma) {
     const router = express.Router();
 
-    // Aplicar middleware de autenticación a todas las rutas de admin
-    router.use(authenticateToken);
-
     // Ruta para descargar la plantilla de proyectos
-    router.get('/proyectos/template', (req, res) => {
+    router.get('/proyectos/template', checkAdmin, (req, res) => {
         try {
             const fields = [
                 'titulo_proyecto', 
@@ -48,59 +46,27 @@ function adminRoutes(prisma, authenticateToken) {
     });
 
     // Ruta para importar proyectos desde un CSV
-    router.post('/proyectos/import', upload.single('file'), (req, res) => {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
-        }
+    router.post('/proyectos/import', checkAdmin, async (req, res) => {
+        const proyectosParaCrear = req.body;
 
-        const results = [];
-        const filePath = req.file.path;
-
-        fs.createReadStream(filePath)
-            .pipe(csv())
-            .on('data', (data) => results.push(data))
-            .on('end', async () => {
-                try {
-                    // Mapear y transformar los datos del CSV al formato del schema de Prisma
-                    const proyectosParaCrear = results.map(row => ({
-                        titulo_proyecto: row.titulo_proyecto,
-                        proyecto_activo: row.proyecto_activo ? row.proyecto_activo.toLowerCase() === 'true' : false,
-                        storyline: row.storyline,
-                        origen_dependencia: row.origen_dependencia,
-                        subsecretaria_direccion: row.subsecretaria_direccion,
-                        categoria: row.categoria,
-                        subcategoria: row.subcategoria,
-                        recursos: row.recursos,
-                        urls: row.urls,
-                        captura: row.captura,
-                        caratula: row.caratula,
-                        ticketera_interna: row.ticketera_interna,
-                        ticketera_externa: row.ticketera_externa,
-                        tier: row.tier || null,
-                        cantidad_recursos_asignados: row.cantidad_recursos_asignados ? parseInt(row.cantidad_recursos_asignados, 10) : 0,
-                        clienteId: row.clienteId ? parseInt(row.clienteId, 10) : null,
-                    }));
-
-                    const result = await prisma.proyecto.createMany({
-                        data: proyectosParaCrear,
-                    });
-
-                    res.json({ message: `Importación completada. Se crearon ${result.count} nuevos proyectos.` });
-
-                } catch (error) {
-                    console.error('Error al importar proyectos:', error);
-                    res.status(500).json({ error: 'Ocurrió un error durante la importación.' });
-                } finally {
-                    // Limpiar el archivo subido
-                    fs.unlinkSync(filePath);
-                }
+        try {
+            const result = await prisma.proyecto.createMany({
+                data: proyectosParaCrear,
             });
+
+            res.json({ message: `Importación completada. Se crearon ${result.count} nuevos proyectos.` });
+
+        } catch (error) {
+            console.error('Error al importar proyectos:', error);
+            console.error('Datos que se intentaron crear:', proyectosParaCrear);
+            res.status(500).json({ error: 'Ocurrió un error durante la importación.', details: error.message });
+        }
     });
 
     // --- RUTAS PARA STAFF ---
 
     // Ruta para descargar la plantilla de staff
-    router.get('/staff/template', (req, res) => {
+    router.get('/staff/template', checkAdmin, (req, res) => {
         try {
             const fields = [
                 'nombre_completo', 'contrato', 'rol', 'nombres', 'apellidos', 'activo', 
@@ -121,7 +87,7 @@ function adminRoutes(prisma, authenticateToken) {
     });
 
     // Ruta para importar staff desde un CSV
-    router.post('/staff/import', upload.single('file'), (req, res) => {
+    router.post('/staff/import', checkAdmin, upload.single('file'), (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No se ha subido ningún archivo.' });
         }
@@ -194,11 +160,142 @@ function adminRoutes(prisma, authenticateToken) {
 
                 } catch (error) {
                     console.error('Error al importar staff:', error);
-                    res.status(500).json({ error: 'Ocurrió un error durante la importación.' });
+                    console.error('Datos que se intentaron crear:', staffParaCrear);
+                    res.status(500).json({ error: 'Ocurrió un error durante la importación.', details: error.message });
                 } finally {
                     fs.unlinkSync(filePath);
                 }
             });
+    });
+
+    // --- RUTAS PARA CLIENTES ---
+    router.get('/clientes/template', checkAdmin, (req, res) => {
+        try {
+            const fields = [
+                'cliente', 'mail_cliente', 'cel_cliente', 'observacion_general', 'nombre_publico', 
+                'nombre_interno', 'tipo', 'fecha_inicio_desarrollo', 'estado', 'dependencia_uso', 
+                'uso_interno_ministerio', 'uso_interno_equipo_desarrollo'
+            ];
+            const json2csvParser = new Parser({ fields });
+            const csv = json2csvParser.parse();
+
+            res.header('Content-Type', 'text/csv');
+            res.attachment('plantilla_clientes.csv');
+            res.send(csv);
+        } catch (error) {
+            console.error('Error al generar la plantilla de clientes CSV:', error);
+            res.status(500).json({ error: 'No se pudo generar la plantilla.' });
+        }
+    });
+
+    router.post('/clientes/import', checkAdmin, async (req, res) => {
+        const clientesParaCrear = req.body;
+
+        try {
+            const result = await prisma.cliente.createMany({
+                data: clientesParaCrear,
+            });
+
+            res.json({ message: `Importación completada. Se crearon ${result.count} nuevos clientes.` });
+
+        } catch (error) {
+            console.error('Error al importar clientes:', error);
+            console.error('Datos que se intentaron crear:', clientesParaCrear);
+            res.status(500).json({ error: 'Ocurrió un error durante la importación.', details: error.message });
+        }
+    });
+
+    // --- RUTAS PARA INTEGRACIONES ---
+    router.get('/integraciones/template', checkAdmin, (req, res) => {
+        try {
+            const fields = ['nombre', 'detalles'];
+            const json2csvParser = new Parser({ fields });
+            const csv = json2csvParser.parse();
+
+            res.header('Content-Type', 'text/csv');
+            res.attachment('plantilla_integraciones.csv');
+            res.send(csv);
+        } catch (error) {
+            console.error('Error al generar la plantilla de integraciones CSV:', error);
+            res.status(500).json({ error: 'No se pudo generar la plantilla.' });
+        }
+    });
+
+    router.post('/integraciones/import', checkAdmin, async (req, res) => {
+        const integracionesParaCrear = req.body;
+
+        try {
+            const result = await prisma.integracion.createMany({
+                data: integracionesParaCrear,
+            });
+
+            res.json({ message: `Importación completada. Se crearon ${result.count} nuevas integraciones.` });
+
+        } catch (error) {
+            console.error('Error al importar integraciones:', error);
+            console.error('Datos que se intentaron crear:', integracionesParaCrear);
+            res.status(500).json({ error: 'Ocurrió un error durante la importación.', details: error.message });
+        }
+    });
+
+    // --- RUTAS PARA EXPORTACIÓN ---
+    router.get('/:dataType/export', checkAdmin, async (req, res) => {
+        const { dataType } = req.params;
+        let data;
+        let filename;
+        let fields;
+
+        try {
+            switch (dataType) {
+                case 'proyectos':
+                    data = await prisma.proyecto.findMany();
+                    filename = 'proyectos.csv';
+                    fields = [
+                        'id', 'titulo_proyecto', 'proyecto_activo', 'storyline', 'origen_dependencia', 
+                        'subsecretaria_direccion', 'categoria', 'subcategoria', 'recursos', 'urls', 
+                        'captura', 'caratula', 'ticketera_interna', 'ticketera_externa', 'tier', 
+                        'cantidad_recursos_asignados', 'clienteId'
+                    ];
+                    break;
+                case 'staff':
+                    data = await prisma.staff.findMany();
+                    filename = 'staff.csv';
+                    fields = [
+                        'id', 'nombre_completo', 'contrato', 'rol', 'nombres', 'apellidos', 'activo', 
+                        'comentario', 'modalidad', 'experiencia', 'origen', 'email', 'skills', 
+                        'desempeno_ley_dto', 'hhee', 'ur', 'coordinacion', 'presencialidad', 
+                        'cumpleanos', 'edad'
+                    ];
+                    break;
+                case 'clientes':
+                    data = await prisma.cliente.findMany();
+                    filename = 'clientes.csv';
+                    fields = [
+                        'id', 'cliente', 'mail_cliente', 'cel_cliente', 'observacion_general', 
+                        'nombre_publico', 'nombre_interno', 'tipo', 'fecha_inicio_desarrollo', 
+                        'estado', 'dependencia_uso', 'uso_interno_ministerio', 'uso_interno_equipo_desarrollo'
+                    ];
+                    break;
+                case 'integraciones':
+                    data = await prisma.integracion.findMany();
+                    filename = 'integraciones.csv';
+                    fields = ['id', 'nombre', 'detalles'];
+                    break;
+                default:
+                    return res.status(400).json({ error: 'Tipo de datos no válido para exportación.' });
+            }
+
+            const json2csvParser = new Parser({ fields });
+            const csvData = json2csvParser.parse(data);
+
+            res.header('Content-Type', 'text/csv');
+            res.attachment(filename);
+            res.send(csvData);
+
+        } catch (error) {
+            console.error(`Error al exportar ${dataType}:`, error);
+            res.status(500).json({ error: `Ocurrió un error durante la exportación de ${dataType}.`, details: error.message });
+        }
     });
 
     return router;

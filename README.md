@@ -1,4 +1,5 @@
-# SIGMALION Project
+# SIGMA - Sistema Integral de Gestión y Monitoreo de Activos
+## SIGMALION Project
 
 ## Descripción
 Este proyecto es un sistema de gestión para la base de datos `sigma_db.sql`, desarrollado con un stack moderno para backend y frontend.
@@ -136,3 +137,18 @@ Las rutas de la API están protegidas. Deberás registrarte e iniciar sesión pa
 -   `PUT /api/staff/:id`
 -   `DELETE /api/staff/:id`
 
+
+
+Para Trabaja la DB de PRISMA
+
+Terminal desde Backend: npx prisma studio
+
+Para registro de users
+
+curl -X POST http://localhost:3000/api/auth/register \
+-H "Content-Type: application/json" \
+-d '{
+  "nombre": "SUPERADMIN",
+  "email": "superadmin@superadmin.com",
+  "password": "superadmin"
+}'

@@ -1,82 +1,3 @@
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
-
-const route = useRoute();
-const router = useRouter();
-const staffMember = ref(null);
-const isLoading = ref(true);
-const error = ref(null);
-
-const isEditing = ref(false);
-const formData = ref({});
-
-const API_URL = 'http://localhost:3000/api/staff';
-
-const fetchStaffMember = async () => {
-  const staffId = route.params.id;
-  isLoading.value = true;
-  try {
-    const response = await axios.get(`${API_URL}/${staffId}`);
-    staffMember.value = response.data;
-    formData.value = { ...staffMember.value };
-    // Format birthday for date input
-    if (formData.value.cumpleanos) {
-      formData.value.cumpleanos = new Date(formData.value.cumpleanos).toISOString().split('T')[0];
-    }
-  } catch (err) {
-    console.error('Error fetching staff member:', err);
-    error.value = `Failed to load staff member #${staffId}.`;
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const saveStaffMember = async () => {
-  const staffId = route.params.id;
-  // Format birthday back to ISO string if it exists
-  if (formData.value.cumpleanos) {
-    formData.value.cumpleanos = new Date(formData.value.cumpleanos).toISOString();
-  }
-  try {
-    const response = await axios.put(`${API_URL}/${staffId}`, formData.value);
-    staffMember.value = response.data;
-    isEditing.value = false;
-  } catch (err) {
-    console.error('Error saving staff member:', err);
-    alert('Failed to save staff member details.');
-  }
-};
-
-const deleteStaffMember = async () => {
-  if (!confirm('¿Estás seguro de que quieres borrar a este miembro del staff?')) {
-    return;
-  }
-  const staffId = route.params.id;
-  try {
-    await axios.delete(`${API_URL}/${staffId}`);
-    router.push('/staff'); // Redirect to staff list after deletion
-  } catch (err) {
-    console.error('Error deleting staff member:', err);
-    alert('Failed to delete staff member.');
-  }
-};
-
-const handleEdit = () => {
-  isEditing.value = true;
-};
-
-const handleCancelEdit = () => {
-  isEditing.value = false;
-  formData.value = { ...staffMember.value }; // Reset form data
-};
-
-onMounted(() => {
-  fetchStaffMember();
-});
-</script>
-
 <template>
   <main class="container mt-4">
     <div v-if="isLoading" class="text-center my-4">
@@ -90,133 +11,250 @@ onMounted(() => {
     </div>
     <div v-else-if="staffMember" class="card p-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1 class="card-title">{{ staffMember.nombre_completo }}</h1>
-        <RouterLink to="/staff" class="btn btn-secondary">&larr; Volver a la lista de Staff</RouterLink>
+        <h1 class="card-title">
+          {{ staffMember.nombre_completo }}
+        </h1>
+        <RouterLink to="/staff" class="btn btn-secondary">
+          &larr; Volver a la lista de Staff
+        </RouterLink>
       </div>
 
-      <div class="d-flex mb-3">
-        <button v-if="!isEditing" @click="handleEdit" class="btn btn-primary me-2">Editar Staff</button>
-        <button class="btn btn-danger" @click="deleteStaffMember">Borrar Staff</button>
-      </div>
-
-      <div class="card-body">
-        <h2 class="card-subtitle mb-3 text-muted">Detalles del Staff</h2>
-        <form v-if="isEditing" @submit.prevent="saveStaffMember">
-          <div class="mb-3">
-            <label class="form-label">Nombre Completo:</label>
-            <input type="text" v-model="formData.nombre_completo" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email:</label>
-            <input type="email" v-model="formData.email" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Contrato:</label>
-            <input type="text" v-model="formData.contrato" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Rol:</label>
-            <select v-model="formData.rol" class="form-select">
-              <option value="Developer">Developer</option>
-              <option value="QA">QA</option>
-              <option value="PM">PM</option>
-              <option value="Designer">Designer</option>
-              <option value="DevOps">DevOps</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Nombres:</label>
-            <input type="text" v-model="formData.nombres" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Apellidos:</label>
-            <input type="text" v-model="formData.apellidos" class="form-control">
-          </div>
-          <div class="form-check mb-3">
-            <input type="checkbox" v-model="formData.activo" class="form-check-input">
-            <label class="form-check-label">Activo:</label>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Comentario:</label>
-            <textarea v-model="formData.comentario" class="form-control"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Modalidad:</label>
-            <select v-model="formData.modalidad" class="form-select">
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contractor">Contractor</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Experiencia:</label>
-            <select v-model="formData.experiencia" class="form-select">
-              <option value="Junior">Junior</option>
-              <option value="Mid">Mid</option>
-              <option value="Senior">Senior</option>
-            </select>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Origen:</label>
-            <input type="text" v-model="formData.origen" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Desempeño Ley DTO:</label>
-            <input type="text" v-model="formData.desempeno_ley_dto" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">HHEE:</label>
-            <input type="text" v-model="formData.hhee" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">UR:</label>
-            <input type="text" v-model="formData.ur" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Coordinación:</label>
-            <input type="text" v-model="formData.coordinacion" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Presencialidad:</label>
-            <input type="text" v-model="formData.presencialidad" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Cumpleaños:</label>
-            <input type="date" v-model="formData.cumpleanos" class="form-control">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Edad:</label>
-            <input type="number" v-model="formData.edad" class="form-control">
-          </div>
-          <div class="d-flex justify-content-end">
-            <button type="submit" class="btn btn-success me-2">Guardar Cambios</button>
-            <button type="button" @click="handleCancelEdit" class="btn btn-secondary">Cancelar</button>
-          </div>
-        </form>
-        <div v-else>
-          <p class="card-text"><strong>Email:</strong> {{ staffMember.email || 'N/A' }}</p>
-          <p class="card-text"><strong>Contrato:</strong> {{ staffMember.contrato || 'N/A' }}</p>
-          <p class="card-text"><strong>Rol:</strong> {{ staffMember.rol || 'N/A' }}</p>
-          <p class="card-text"><strong>Nombres:</strong> {{ staffMember.nombres || 'N/A' }}</p>
-          <p class="card-text"><strong>Apellidos:</strong> {{ staffMember.apellidos || 'N/A' }}</p>
-          <p class="card-text"><strong>Activo:</strong> {{ staffMember.activo ? 'Sí' : 'No' }}</p>
-          <p class="card-text"><strong>Comentario:</strong> {{ staffMember.comentario || 'N/A' }}</p>
-          <p class="card-text"><strong>Modalidad:</strong> {{ staffMember.modalidad || 'N/A' }}</p>
-          <p class="card-text"><strong>Experiencia:</strong> {{ staffMember.experiencia || 'N/A' }}</p>
-          <p class="card-text"><strong>Origen:</strong> {{ staffMember.origen || 'N/A' }}</p>
-          <p class="card-text"><strong>Desempeño Ley DTO:</strong> {{ staffMember.desempeno_ley_dto || 'N/A' }}</p>
-          <p class="card-text"><strong>HHEE:</strong> {{ staffMember.hhee || 'N/A' }}</p>
-          <p class="card-text"><strong>UR:</strong> {{ staffMember.ur || 'N/A' }}</p>
-          <p class="card-text"><strong>Coordinación:</strong> {{ staffMember.coordinacion || 'N/A' }}</p>
-          <p class="card-text"><strong>Presencialidad:</strong> {{ staffMember.presencialidad || 'N/A' }}</p>
-          <p class="card-text"><strong>Cumpleaños:</strong> {{ staffMember.cumpleanos ? new Date(staffMember.cumpleanos).toLocaleDateString() : 'N/A' }}</p>
-          <p class="card-text"><strong>Edad:</strong> {{ staffMember.edad || 'N/A' }}</p>
+      <div class="row g-4">
+        <div class="col-md-12">
+          <EditableDetailCard
+            title="Detalles del Staff"
+            :data="staffMember"
+            :fields="staffFields"
+            :form-fields="staffFormFields"
+            @save="updateStaffMember"
+          />
+        </div>
+        <div class="col-md-12">
+          <AssignedListCard
+            title="Proyectos Asignados"
+            item-type="Proyecto"
+            :assigned-items="staffMember.proyectos"
+            :all-items="allProjects"
+            name-field="titulo_proyecto"
+            :table-headers="['ID', 'Título del Proyecto']"
+            :display-fields="[{ key: 'id', label: 'ID' }, { key: 'titulo_proyecto', label: 'Título del Proyecto' }]"
+            @add="addProjectToStaff"
+            @remove="removeProjectFromStaff"
+          />
         </div>
       </div>
     </div>
   </main>
 </template>
 
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import { useNotificationStore } from '@/stores/notification';
+import EditableDetailCard from '@/components/EditableDetailCard.vue';
+import AssignedListCard from '@/components/AssignedListCard.vue';
+import { useAuthStore } from '@/stores/auth';
+
+const route = useRoute();
+const router = useRouter();
+const staffMember = ref(null);
+const isLoading = ref(true);
+const error = ref(null);
+
+const notificationStore = useNotificationStore();
+const authStore = useAuthStore();
+const API_BASE_URL = 'http://localhost:3000/api';
+
+const allProjects = ref([]);
+const rolStaffEnumValues = ref([]);
+const modalidadStaffEnumValues = ref([]);
+const experienciaStaffEnumValues = ref([]);
+
+const staffFields = [
+  { key: 'nombre_completo', label: 'Nombre Completo' },
+  { key: 'email', label: 'Email' },
+  { key: 'contrato', label: 'Contrato' },
+  { key: 'rol', label: 'Rol' },
+  { key: 'nombres', label: 'Nombres' },
+  { key: 'apellidos', label: 'Apellidos' },
+  { key: 'activo', label: 'Activo', type: 'boolean' },
+  { key: 'comentario', label: 'Comentario' },
+  { key: 'modalidad', label: 'Modalidad' },
+  { key: 'experiencia', label: 'Experiencia' },
+  { key: 'origen', label: 'Origen' },
+  { key: 'desempeno_ley_dto', label: 'Desempeño Ley DTO' },
+  { key: 'hhee', label: 'HHEE' },
+  { key: 'ur', label: 'UR' },
+  { key: 'coordinacion', label: 'Coordinación' },
+  { key: 'presencialidad', label: 'Presencialidad' },
+  { key: 'cumpleanos', label: 'Cumpleaños', type: 'date' },
+  { key: 'edad', label: 'Edad', type: 'number' }, // Computed, not directly editable
+];
+
+const staffFormFields = computed(() => [
+  { key: 'nombre_completo', label: 'Nombre Completo', type: 'text', required: true },
+  { key: 'email', label: 'Email', type: 'email', required: true },
+  { key: 'contrato', label: 'Contrato', type: 'text' },
+  { key: 'rol', label: 'Rol', type: 'select', options: rolStaffEnumValues.value.map(v => ({ value: v, text: v })) },
+  { key: 'nombres', label: 'Nombres', type: 'text' },
+  { key: 'apellidos', label: 'Apellidos', type: 'text' },
+  { key: 'activo', label: 'Activo', type: 'checkbox' },
+  { key: 'comentario', label: 'Comentario', type: 'textarea' },
+  { key: 'modalidad', label: 'Modalidad', type: 'select', options: modalidadStaffEnumValues.value.map(v => ({ value: v, text: v.replace('_', '-') })) },
+  { key: 'experiencia', label: 'Experiencia', type: 'select', options: experienciaStaffEnumValues.value.map(v => ({ value: v, text: v })) },
+  { key: 'origen', label: 'Origen', type: 'text' },
+  { key: 'desempeno_ley_dto', label: 'Desempeño Ley DTO', type: 'text' },
+  { key: 'hhee', label: 'HHEE', type: 'text' },
+  { key: 'ur', label: 'UR', type: 'text' },
+  { key: 'coordinacion', label: 'Coordinación', type: 'text' },
+  { key: 'presencialidad', label: 'Presencialidad', type: 'text' },
+  { key: 'cumpleanos', label: 'Cumpleaños', type: 'date' },
+]);
+
+const fetchStaffMember = async () => {
+  const staffId = route.params.id;
+  isLoading.value = true;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.get(`${API_BASE_URL}/staff/${staffId}`, { headers });
+    staffMember.value = response.data;
+    // Add age for display
+    if (staffMember.value.cumpleanos) {
+      staffMember.value.edad = calculateAge(staffMember.value.cumpleanos);
+    }
+  } catch (err) {
+    console.error('Error fetching staff member:', err);
+    error.value = `Failed to load staff member #${staffId}.`;
+    notificationStore.showNotification(`Error al cargar miembro del staff #${staffId}.`, 'error');
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const updateStaffMember = async (updatedData) => {
+  const staffId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    // Format date for API if present
+    if (updatedData.cumpleanos) {
+      updatedData.cumpleanos = new Date(updatedData.cumpleanos).toISOString();
+    }
+    // Recalculate age if birthday changed
+    if (updatedData.cumpleanos) {
+      updatedData.edad = calculateAge(updatedData.cumpleanos);
+    }
+
+    const response = await axios.put(`${API_BASE_URL}/staff/${staffId}`, updatedData, { headers });
+    staffMember.value = response.data; // Update local data with response
+    notificationStore.showNotification('Miembro del staff actualizado exitosamente.', 'success');
+  } catch (err) {
+    console.error('Error saving staff member:', err);
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al guardar los detalles del staff.', 'error');
+  }
+};
+
+const deleteStaffMember = async () => {
+  if (!confirm('¿Estás seguro de que quieres borrar a este miembro del staff?')) {
+    return;
+  }
+  const staffId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.delete(`${API_BASE_URL}/staff/${staffId}`, { headers });
+    notificationStore.showNotification('Miembro del staff eliminado exitosamente.', 'success');
+    router.push('/staff'); // Redirect to staff list after deletion
+  } catch (err) {
+    console.error('Error deleting staff member:', err);
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al eliminar el miembro del staff.', 'error');
+  }
+};
+
+const fetchEnums = async () => {
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.get(`${API_BASE_URL}/proyectos/enums`, { headers }); // Reusing projects enums endpoint
+    rolStaffEnumValues.value = response.data.RolStaff;
+    modalidadStaffEnumValues.value = response.data.ModalidadStaff;
+    experienciaStaffEnumValues.value = response.data.ExperienciaStaff;
+  } catch (err) {
+    notificationStore.showNotification('Error al cargar opciones de selección.', 'error');
+    console.error('Error fetching enums:', err);
+  }
+};
+
+const fetchAllProjects = async () => {
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    const response = await axios.get(`${API_BASE_URL}/proyectos`, { headers });
+    allProjects.value = response.data.proyectos;
+  } catch (err) {
+    notificationStore.showNotification('Error al cargar proyectos disponibles.', 'error');
+    console.error('Error fetching all projects:', err);
+  }
+};
+
+const addProjectToStaff = async (projectId) => {
+  const staffId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.post(`${API_BASE_URL}/proyectos/${projectId}/staff`, { staffId }, { headers });
+    await fetchStaffMember(); // Re-fetch staff member to update assigned projects
+    notificationStore.showNotification('Proyecto asignado exitosamente.', 'success');
+  } catch (err) {
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al asignar el proyecto.', 'error');
+    console.error('Error adding project to staff:', err);
+  }
+};
+
+const removeProjectFromStaff = async (projectId) => {
+  if (!confirm('¿Quitar este proyecto del staff?')) return;
+  const staffId = route.params.id;
+  try {
+    const headers = { Authorization: `Bearer ${authStore.token}` };
+    await axios.delete(`${API_BASE_URL}/proyectos/${projectId}/staff/${staffId}`, { headers });
+    await fetchStaffMember(); // Re-fetch staff member to update assigned projects
+    notificationStore.showNotification('Proyecto quitado exitosamente.', 'success');
+  } catch (err) {
+    notificationStore.showNotification(err.response?.data?.error || 'Hubo un error al quitar el proyecto.', 'error');
+    console.error('Error removing project from staff:', err);
+  }
+};
+
+function calculateAge(birthdate) {
+  if (!birthdate) return null;
+  const birthDate = new Date(birthdate);
+  const today = new Date();
+  let years = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    years--;
+  }
+  return years;
+}
+
+onMounted(async () => {
+  await fetchEnums();
+  await fetchStaffMember();
+  await fetchAllProjects();
+});
+
+</script>
+
 <style scoped>
-/* Removed most styles, Bootstrap will handle it */
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.tabs-card .nav-link {
+  cursor: pointer;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 4rem;
+}
 </style>

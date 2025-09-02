@@ -16,6 +16,7 @@ enum EstadoProyecto {
   Inactivo
   En_Desarrollo @map("En Desarrollo")
   Mantenimiento
+  En_Supervision @map("En Supervision")
 }
 
 enum RolStaff {
@@ -24,6 +25,9 @@ enum RolStaff {
   PM
   Designer
   DevOps
+  Director
+  Coordinador
+  Analista
 }
 
 enum CategoriaProyecto {
@@ -73,6 +77,11 @@ enum Tier {
   CINCO
 }
 
+enum Unit {
+  MB
+  GB
+}
+
 // Models
 model Proyecto {
   id                          Int      @id @default(autoincrement())
@@ -81,8 +90,8 @@ model Proyecto {
   storyline                   String?
   origen_dependencia          String?
   subsecretaria_direccion     String?
-  categoria                   String?
-  subcategoria                String?
+  categoria                   CategoriaProyecto?
+  subcategoria                SubcategoriaProyecto?
   recursos                    String?
   urls                        String?
   captura                     String?
@@ -97,12 +106,14 @@ model Proyecto {
   backend_details    BackendDetails?
   frontend_details   FrontendDetails?
   infraestructura    Infraestructura?
-  licencias          Licencias?
+  databases          Databases?
   tecnologias        Tecnologias?
   integraciones      Integracion[]       @relation("ProyectoIntegraciones")
 
   clienteId          Int? // New field to link to Cliente
   cliente            Cliente?            @relation(fields: [clienteId], references: [id]) // New relation
+
+  estado             EstadoProyecto?     // Field added to fix dashboard query
 
   @@map("proyectos")
 }
@@ -212,7 +223,7 @@ model Infraestructura {
   @@map("infraestructura")
 }
 
-model Licencias {
+model Databases {
   id                           Int      @id @default(autoincrement())
   proyecto_id                  Int      @unique
   herramientas_desarrollo      String?
@@ -224,8 +235,10 @@ model Licencias {
   modo_licencia_bd             String?
   tipo_licencia_bd             String?
   herramienta_desarrollo_bd    String?
-  tamano_actual                String?
-  tamano_max_permitido         String?
+  tamano_actual_value          Float?
+  tamano_actual_unit           Unit?
+  tamano_max_permitido_value   Float?
+  tamano_max_permitido_unit    Unit?
   servidor_que_aloja           String?
   mantenimiento                String?
   backup_periodico             Boolean?
@@ -238,7 +251,7 @@ model Licencias {
 
   proyecto                     Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
 
-  @@map("licencias")
+  @@map("databases")
 }
 
 model Tecnologias {
@@ -247,7 +260,8 @@ model Tecnologias {
   lenguaje_desarrollo   String?
   base_datos            String?
   control_versiones     String?
-  tamano_bd             String?
+  tamano_bd_value       Float?
+  tamano_bd_unit        Unit?
   alojamiento_infra     String?
   label                 String?
   mantenimiento_soporte String?
@@ -263,11 +277,19 @@ model Tecnologias {
   @@map("tecnologias")
 }
 
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
 model Usuario {
   id            Int    @id @default(autoincrement())
   nombre        String
+  Apellido      String @default("")
   email         String @unique
   password_hash String
+  role          Role   @default(USER)
 
   @@map("usuarios")
 }
@@ -279,4 +301,16 @@ model Integracion {
   proyectos Proyecto[] @relation("ProyectoIntegraciones")
 
   @@map("integraciones")
+}
+
+model DashboardChart {
+  id        Int      @id @default(autoincrement())
+  title     String
+  chartType String // e.g., 'bar', 'pie', 'line'
+  dataType  String // e.g., 'projectsByCategory', 'staffByRole', 'totalCounts'
+  options   String?  // JSON string for chart-specific options (e.g., colors, labels)
+  order     Int      @default(0) // Order in which charts appear on the dashboard
+  enabled   Boolean  @default(true) // Whether the chart is active on the dashboard
+
+  @@map("dashboard_charts")
 }

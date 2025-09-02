@@ -1,4 +1,6 @@
 # Changelog
+# SIGMA - Sistema Integral de Gestión y Monitoreo de Activos
+## SIGMALION
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 

@@ -1,53 +1,105 @@
 <template>
   <div class="card h-100">
     <div class="card-header">
-      <h5 class="mb-0">{{ title }}</h5>
-      <button v-if="!isEditing" @click="startEditing" class="btn btn-sm btn-primary">Editar</button>
+      <h5 class="mb-0">
+        {{ title }}
+      </h5>
+      <button
+        v-if="!isEditing"
+        class="btn btn-sm btn-primary"
+        @click="startEditing"
+      >
+        Editar
+      </button>
     </div>
     <div class="card-body">
-      <form v-if="isEditing" @submit.prevent="saveChanges">
+      <form
+        v-if="isEditing"
+        @submit.prevent="saveChanges"
+      >
         <div class="row g-3">
-          <div v-for="field in formFields" :key="field.key" :class="[field.type === 'textarea' ? 'col-12' : 'col-md-6', field.fieldClass]">
-            <label :for="field.key" class="form-label">{{ field.label }}</label>
-            <input v-if="field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date'"
-                  :type="field.type"
-                  :id="field.key"
-                  v-model="localFormData[field.key]"
-                  class="form-control"
-                  :required="field.required"
+          <div
+            v-for="field in formFields"
+            :key="field.key"
+            :class="[field.type === 'textarea' ? 'col-12' : 'col-md-6', field.fieldClass]"
+          >
+            <label
+              :for="field.key"
+              class="form-label"
+            >{{ field.label }}</label>
+            <input
+              v-if="field.type === 'text' || field.type === 'email' || field.type === 'number' || field.type === 'date'"
+              :id="field.key"
+              v-model="localFormData[field.key]"
+              :type="field.type"
+              class="form-control"
+              :required="field.required"
             >
-            <textarea v-else-if="field.type === 'textarea'"
-                      :id="field.key"
-                      v-model="localFormData[field.key]"
-                      class="form-control"
-                      :required="field.required"
-            ></textarea>
-            <select v-else-if="field.type === 'select'"
-                    :id="field.key"
-                    v-model="localFormData[field.key]"
-                    class="form-select"
-                    :required="field.required"
+            <textarea
+              v-else-if="field.type === 'textarea'"
+              :id="field.key"
+              v-model="localFormData[field.key]"
+              class="form-control"
+              :required="field.required"
+            />
+            <select
+              v-else-if="field.type === 'select'"
+              :id="field.key"
+              v-model="localFormData[field.key]"
+              class="form-select"
+              :required="field.required"
             >
-              <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.text }}</option>
-            </select>
-            <div v-else-if="field.type === 'checkbox'" class="form-check mt-2">
-              <input type="checkbox"
-                    :id="field.key"
-                    v-model="localFormData[field.key]"
-                    class="form-check-input"
+              <option
+                v-for="option in field.options"
+                :key="option.value"
+                :value="option.value"
               >
-              <label :for="field.key" class="form-check-label">{{ field.label }}</label>
+                {{ option.text }}
+              </option>
+            </select>
+            <div
+              v-else-if="field.type === 'checkbox'"
+              class="form-check mt-2"
+            >
+              <input
+                :id="field.key"
+                v-model="localFormData[field.key]"
+                type="checkbox"
+                class="form-check-input"
+              >
+              <label
+                :for="field.key"
+                class="form-check-label"
+              >{{ field.label }}</label>
             </div>
           </div>
         </div>
         <div class="d-flex justify-content-end mt-4">
-          <button type="submit" class="btn btn-primary me-2">Guardar</button>
-          <button type="button" @click="cancelEditing" class="btn btn-secondary">Cancelar</button>
+          <button
+            type="submit"
+            class="btn btn-primary me-2"
+          >
+            Guardar
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            @click="cancelEditing"
+          >
+            Cancelar
+          </button>
         </div>
       </form>
       <div v-else>
-        <div v-if="data" class="row g-3">
-          <div v-for="field in fields" :key="field.key" :class="['col-md-6', field.fieldClass]">
+        <div
+          v-if="data"
+          class="row g-3"
+        >
+          <div
+            v-for="field in fields"
+            :key="field.key"
+            :class="['col-md-6', field.fieldClass]"
+          >
             <p class="card-text mb-1">
               <strong>{{ field.label }}:</strong>
               <span v-if="field.type === 'boolean'">{{ data[field.key] ? 'Sí' : 'No' }}</span>
@@ -56,7 +108,10 @@
             </p>
           </div>
         </div>
-        <div v-else class="text-muted">
+        <div
+          v-else
+          class="text-muted"
+        >
           No hay datos disponibles.
         </div>
       </div>
@@ -125,6 +180,7 @@ const cancelEditing = () => {
       localFormData.value[field.key] = new Date(localFormData.value[field.key]).toISOString().split('T')[0];
     }
   });
+  emit('cancel');
 };
 </script>
 

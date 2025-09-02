@@ -11,6 +11,9 @@ import IntegracionDetailView from '../views/IntegracionDetailView.vue'
 import UsersListView from '../views/UsersListView.vue'
 import UserDetailView from '../views/UserDetailView.vue'
 import AdminView from '../views/AdminView.vue'
+import ClientesListView from '../views/ClientesListView.vue'
+import ClienteDetailView from '../views/ClienteDetailView.vue'
+import ImportValidationView from '../views/ImportValidationView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -28,9 +31,28 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/import-validation',
+      name: 'import-validation',
+      component: ImportValidationView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/proyectos',
       name: 'proyectos',
       component: ProyectosView
+    },
+    {
+      path: '/clientes',
+      name: 'clientes-list',
+      component: ClientesListView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/clientes/:id',
+      name: 'cliente-detail',
+      component: ClienteDetailView,
+      props: true,
+      meta: { requiresAuth: true }
     },
     {
       path: '/staff',

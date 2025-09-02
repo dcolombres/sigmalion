@@ -14,10 +14,10 @@ const errorMessage = ref('');
 const handleRegister = async () => {
   try {
     await authStore.register(nombre.value, email.value, password.value);
-    alert('User registered successfully. You can now log in.');
+    alert('Usuario registrado. Ahora podés loguearte.');
     router.push('/login'); // Redirect to login after successful registration
   } catch (error) {
-    errorMessage.value = error.response?.data?.error || 'Registration failed.';
+    errorMessage.value = error.response?.data?.error || 'El registro falló.';
   }
 };
 </script>
@@ -27,35 +27,74 @@ const handleRegister = async () => {
     <div class="auth-card card">
       <div class="card-body">
         <div class="text-center mb-4">
-          <img src="/src/img/logosigma.svg" alt="SIGMA Logo" width="150" />
-          <h2 class="mt-3">Register</h2>
+          <img
+            src="/src/img/logosigma.svg"
+            alt="SIGMA Logo"
+            width="150"
+          >
+          
         </div>
         <form @submit.prevent="handleRegister">
           <div class="form-group mb-3">
-            <label for="name">Name</label>
+            <label for="name">Nombre</label>
             <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-user"></i></span>
-              <input type="text" id="name" class="form-control" v-model="nombre" required placeholder="Enter your name">
+              <span class="input-group-text"><i class="fas fa-user" /></span>
+              <input
+                id="name"
+                v-model="nombre"
+                type="text"
+                class="form-control"
+                required
+                placeholder="Enter your name"
+              >
             </div>
           </div>
           <div class="form-group mb-3">
             <label for="email">Email</label>
             <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-              <input type="email" id="email" class="form-control" v-model="email" required placeholder="Enter your email">
+              <span class="input-group-text"><i class="fas fa-envelope" /></span>
+              <input
+                id="email"
+                v-model="email"
+                type="email"
+                class="form-control"
+                required
+                placeholder="Enter your email"
+              >
             </div>
           </div>
           <div class="form-group mb-4">
             <label for="password">Password</label>
             <div class="input-group">
-              <span class="input-group-text"><i class="fas fa-lock"></i></span>
-              <input type="password" id="password" class="form-control" v-model="password" required placeholder="Enter your password">
+              <span class="input-group-text"><i class="fas fa-lock" /></span>
+              <input
+                id="password"
+                v-model="password"
+                type="password"
+                class="form-control"
+                required
+                placeholder="Enter your password"
+              >
             </div>
           </div>
-          <button type="submit" class="btn btn-primary w-100">Register</button>
-          <p v-if="errorMessage" class="error-message mt-3">{{ errorMessage }}</p>
+          <button
+            type="submit"
+            class="btn btn-primary w-100"
+          >
+            Registro
+          </button>
+          <p
+            v-if="errorMessage"
+            class="error-message mt-3"
+          >
+            {{ errorMessage }}
+          </p>
         </form>
-        <p class="text-center mt-4">Already have an account? <RouterLink to="/login">Login here</RouterLink></p>
+        <p class="text-center mt-4">
+          ¿Ya estás registrado? <RouterLink to="/login">
+            Accedé al Login
+          </RouterLink>
+        </p>
       </div>
     </div>
   </div>

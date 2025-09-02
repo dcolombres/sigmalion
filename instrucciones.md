@@ -1,3 +1,6 @@
+# SIGMA - Sistema Integral de Gestión y Monitoreo de Activos
+## SIGMALION
+
 # Instrucciones para Desarrolladores
 
 Este documento proporciona una guía más detallada para desarrolladores que trabajan en el proyecto SIGMALION.
@@ -69,6 +72,10 @@ Las rutas en `backend/index.js` que requieren autenticación utilizan el middlew
 ### Peticiones a la API
 
 -   Todas las peticiones HTTP se realizan utilizando `axios`. El interceptor de Axios configurado en `auth.js` añade automáticamente el token JWT a las cabeceras de las peticiones si el usuario está autenticado.
+
+### Documentacion de la API
+
+- En Apiary https://sigma8.docs.apiary.io/
 
 ### Guardias de Ruta
 
