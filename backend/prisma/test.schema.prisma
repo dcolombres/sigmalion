@@ -1,0 +1,95 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./test.db"
+}
+
+model Usuario {
+  id            Int      @id @default(autoincrement())
+  nombre        String
+  email         String   @unique
+  password_hash String
+  proyectos     Proyecto[]
+}
+
+model Proyecto {
+  id                          Int      @id @default(autoincrement())
+  titulo_proyecto             String
+  storyline                   String?
+  proyecto_activo             Boolean  @default(false)
+  origen_dependencia          String?
+  subsecretaria_direccion     String?
+  categoria                   String?
+  subcategoria                String?
+  recursos                    String?
+  urls                        String?
+  captura                     String?
+  caratula                    String?
+  ticketera_interna           String?
+  ticketera_externa           String?
+  tier                        String?
+  cantidad_recursos_asignados Int      @default(0)
+  clienteId                   Int?
+  cliente                     Cliente? @relation(fields: [clienteId], references: [id])
+  staff                       Staff[]
+  tecnologias                 Tecnologias[]
+  backend_details             BackendDetails[]
+  frontend_details            FrontendDetails[]
+  infraestructura             Infraestructura[]
+  licencias                   Licencias[]
+  integraciones               Integracion[]
+  usuarios                    Usuario[]
+}
+
+model Cliente {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model Staff {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model Tecnologias {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model BackendDetails {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model FrontendDetails {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model Infraestructura {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model Licencias {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  proyectos   Proyecto[]
+}
+
+model Integracion {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  detalles    String?
+  proyectos   Proyecto[]
+}

@@ -1,0 +1,310 @@
+<script setup>
+import { ref } from 'vue';
+import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { useAuthStore } from './stores/auth';
+import { useNotificationStore } from './stores/notification';
+import ToastNotification from './components/ToastNotification.vue';
+import LoadingSpinner from './components/LoadingSpinner.vue';
+
+const authStore = useAuthStore();
+const notificationStore = useNotificationStore();
+const router = useRouter();
+
+const sidebarToggled = ref(false);
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push('/login');
+};
+
+const toggleSidebar = () => {
+  sidebarToggled.value = !sidebarToggled.value;
+};
+</script>
+
+<template>
+  <div :class="['wrapper', { 'sidebar-toggled': sidebarToggled }]">
+    <LoadingSpinner v-if="authStore.isLoading" />
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <img
+          alt="Mecon logo"
+          class="logo"
+          src="/src/img/logo_mecon_ss_gestion_admin_produccion.svg"
+        >
+        <img
+          alt="Sigma logo"
+          class="logo-collapsed"
+          src="/src/img/logosigma.svg"
+        >
+      </div>
+      <div class="list-group">
+        <RouterLink
+          to="/"
+          class="list-group-item"
+        >
+          <i class="fas fa-tachometer-alt" /> <span>Dashboard</span>
+        </RouterLink>
+        <RouterLink
+          to="/proyectos"
+          class="list-group-item"
+        >
+          <i class="fas fa-project-diagram" /> <span>Proyectos</span>
+        </RouterLink>
+        <RouterLink
+          to="/clientes"
+          class="list-group-item"
+        >
+          <i class="fas fa-address-book" /> <span>Clientes</span>
+        </RouterLink>
+        <RouterLink
+          v-if="authStore.isAuthenticated"
+          to="/staff"
+          class="list-group-item"
+        >
+          <i class="fas fa-users" /> <span>Staff</span>
+        </RouterLink>
+        <RouterLink
+          v-if="authStore.isAuthenticated"
+          to="/integraciones"
+          class="list-group-item"
+        >
+          <i class="fas fa-puzzle-piece" /> <span>Integraciones</span>
+        </RouterLink>
+        <RouterLink
+          v-if="authStore.isAdmin"
+          to="/users"
+          class="list-group-item"
+        >
+          <i class="fas fa-user-shield" /> <span>Usuarios</span>
+        </RouterLink>
+        <RouterLink
+          v-if="authStore.isAdmin"
+          to="/admin"
+          class="list-group-item"
+        >
+          <i class="fas fa-file-import" /> <span>Administración</span>
+        </RouterLink>
+      </div>
+
+      <div class="sidebar-footer">
+        <div
+          v-if="authStore.isAuthenticated"
+          class="user-info"
+        >
+          <div class="user-details">
+            <i class="fas fa-user-circle fa-lg" />
+            <div class="user-text">
+              <div class="fw-bold">
+                {{ authStore.user?.nombre || 'Usuario' }}
+              </div>
+              <small class="text-muted">{{ authStore.user?.email || '' }}</small>
+            </div>
+          </div>
+          <button
+            class="btn-logout"
+            @click="handleLogout"
+          >
+            <i class="fas fa-sign-out-alt" />
+          </button>
+        </div>
+        <div
+          v-if="!authStore.isAuthenticated"
+          class="auth-links"
+        >
+          <RouterLink
+            to="/login"
+            class="list-group-item"
+          >
+            <i class="fas fa-sign-in-alt" /> <span>Login</span>
+          </RouterLink>
+          <RouterLink
+            to="/register"
+            class="list-group-item"
+          >
+            <i class="fas fa-user-plus" /> <span>Register</span>
+          </RouterLink>
+        </div>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <nav class="navbar navbar-light bg-light">
+        <button
+          class="btn btn-primary d-md-none"
+          @click="toggleSidebar"
+        >
+          <i class="fas fa-bars" />
+        </button>
+      </nav>
+      <div class="container-fluid content-container">
+        <RouterView />
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Component -->
+  <ToastNotification
+    :message="notificationStore.message"
+    :type="notificationStore.type"
+    :show="notificationStore.show"
+    @update:show="notificationStore.hideNotification"
+  />
+</template>
+
+<style scoped>
+.wrapper {
+  display: flex;
+  height: 100vh;
+  background-color: var(--background-color);
+}
+
+.sidebar {
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sidebar-background-color);
+  transition: margin-left 0.3s ease;
+  border-right: 1px solid #e0e0e0;
+}
+
+.sidebar-header {
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.logo {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+}
+
+.logo-collapsed {
+  display: none;
+}
+
+.list-group {
+  flex-grow: 1;
+  padding: 0 1rem;
+}
+
+.list-group-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  color: var(--sidebar-text-color);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.list-group-item:hover,
+.router-link-exact-active {
+  background-color: var(--sidebar-active-color);
+  color: var(--sidebar-active-text-color);
+}
+
+.list-group-item i {
+  margin-right: 1rem;
+  font-size: 1.2rem;
+}
+
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+}
+
+.user-details {
+  display: flex;
+  align-items: center;
+}
+
+.user-text {
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.btn-logout {
+  background: none;
+  border: none;
+  color: var(--sidebar-text-color);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.btn-logout:hover {
+  color: var(--sidebar-active-color);
+}
+
+.auth-links {
+    padding-top: 1rem;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.content-container {
+  padding-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    margin-left: -250px;
+  }
+
+  .wrapper.sidebar-toggled .sidebar {
+    margin-left: 0;
+  }
+
+  .sidebar .logo {
+    display: block;
+  }
+
+  .sidebar .logo-collapsed {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar-collapsed .sidebar {
+    width: 80px;
+  }
+
+  .sidebar-collapsed .sidebar .logo {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar .logo-collapsed {
+    display: block;
+    width: 40px;
+    height: 40px;
+  }
+
+  .sidebar-collapsed .sidebar .list-group-item span {
+    display: none;
+  }
+
+  .sidebar-collapsed .sidebar .list-group-item i {
+    margin-right: 0;
+  }
+
+  .sidebar-collapsed .sidebar .user-text, .sidebar-collapsed .sidebar .btn-logout {
+      display: none;
+  }
+}
+
+</style>

@@ -1,0 +1,316 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Enums
+enum EstadoProyecto {
+  Activo
+  Inactivo
+  En_Desarrollo @map("En Desarrollo")
+  Mantenimiento
+  En_Supervision @map("En Supervision")
+}
+
+enum RolStaff {
+  Developer
+  QA
+  PM
+  Designer
+  DevOps
+  Director
+  Coordinador
+  Analista
+}
+
+enum CategoriaProyecto {
+  Aplicativo
+  Servicio
+  Sistema
+  Plataforma
+  Formulario
+  Registro
+  Tableros
+  APP_Mobile 
+  Microservicio
+  API
+  Otra
+}
+
+enum SubcategoriaProyecto {
+  web
+  mobile
+  cms
+  monitor
+  procesos
+  envio_masivo 
+  datos
+  plataforma
+  asesoramiento
+  otra
+}
+
+enum ModalidadStaff {
+  Full_time @map("Full-time")
+  Part_time @map("Part-time")
+  Contractor
+}
+
+enum ExperienciaStaff {
+  Junior
+  Mid
+  Senior
+}
+
+enum Tier {
+  UNO
+  DOS
+  TRES
+  CUATRO
+  CINCO
+}
+
+enum Unit {
+  MB
+  GB
+}
+
+// Models
+model Proyecto {
+  id                          Int      @id @default(autoincrement())
+  titulo_proyecto             String
+  proyecto_activo             Boolean? @default(false)
+  storyline                   String?
+  origen_dependencia          String?
+  subsecretaria_direccion     String?
+  categoria                   CategoriaProyecto?
+  subcategoria                SubcategoriaProyecto?
+  recursos                    String?
+  urls                        String?
+  captura                     String?
+  caratula                    String?
+  ticketera_interna           String?
+  ticketera_externa           String?
+  tier                        Tier?
+  cantidad_recursos_asignados Int?     @default(0)
+
+  // Relations
+  staff              Staff[]             @relation("StaffProyectos")
+  backend_details    BackendDetails?
+  frontend_details   FrontendDetails?
+  infraestructura    Infraestructura?
+  databases          Databases?
+  tecnologias        Tecnologias?
+  integraciones      Integracion[]       @relation("ProyectoIntegraciones")
+
+  clienteId          Int? // New field to link to Cliente
+  cliente            Cliente?            @relation(fields: [clienteId], references: [id]) // New relation
+
+  estado             EstadoProyecto?     // Field added to fix dashboard query
+
+  @@map("proyectos")
+}
+
+model Staff {
+  id                Int                 @id @default(autoincrement())
+  nombre_completo   String
+  contrato          String?
+  rol               RolStaff?
+  nombres           String?
+  apellidos         String?
+  activo            Boolean?
+  comentario        String?
+  modalidad         ModalidadStaff?
+  experiencia       ExperienciaStaff?
+  origen            String?
+  email             String?             @unique
+  skills            String?
+  desempeno_ley_dto String?
+  hhee              String?
+  ur                String?
+  coordinacion      String?
+  presencialidad    String?
+  cumpleanos        String?
+  edad              Int?
+
+  proyectos         Proyecto[]          @relation("StaffProyectos")
+
+  @@map("staff")
+}
+
+model Cliente {
+  id                            Int             @id @default(autoincrement())
+  cliente                       String?
+  mail_cliente                  String?
+  cel_cliente                   String?
+  observacion_general           String?
+  nombre_publico                String?
+  nombre_interno                String?
+  tipo                          String?
+  fecha_inicio_desarrollo       DateTime?
+  estado                        EstadoProyecto?
+  dependencia_uso               String?
+  uso_interno_ministerio        Boolean?
+  uso_interno_equipo_desarrollo Boolean?
+
+  proyectos                     Proyecto[] // One client can have many projects
+
+  @@map("clientes")
+}
+
+model BackendDetails {
+  id                         Int      @id @default(autoincrement())
+  proyecto_id                Int      @unique
+  lenguaje_principal_bckend  String?
+  version_utilizada          String?
+  lenguaje_secundario        String?
+  framework_bckend           String?
+  otras_librerias            String?
+
+  proyecto                   Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
+
+  @@map("backend_details")
+}
+
+model FrontendDetails {
+  id                           Int      @id @default(autoincrement())
+  proyecto_id                  Int      @unique
+  lenguaje_principal_frontend  String?
+  framework_frontend           String?
+  otras_librerias_requeridas   String?
+  herramientas_desarrollo      String?
+  ide_compiladores             String?
+  version_ide_comp             String?
+  modo_licenciamiento          String?
+
+  proyecto                     Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
+
+  @@map("frontend_details")
+}
+
+model Infraestructura {
+  id                               Int      @id @default(autoincrement())
+  proyecto_id                      Int      @unique
+  arq_hardware                     String?
+  hosting_en_data_center           Boolean?
+  virtualizado                     Boolean?
+  ubicacion_servidor               String?
+  servidor_web                     String?
+  nombre_comercial_srv             String?
+  version_srv                      String?
+  hosting_srv                      Boolean?
+  virtualizado_srv                 Boolean?
+  ubicacion_srv                    String?
+  escalado_srv                     String?
+  entorno_cliente_so_soportadas    String?
+  navegadores_versiones            String?
+  req_instalar_paq_adicionales     Boolean?
+  paquetes_adicionales_necesarios  String?
+  modelo_seguridad                 String?
+  posee_entorno_test               Boolean?
+  test_automatico                  Boolean?
+  ubicacion_doc_deploy             String?
+
+  proyecto                         Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
+
+  @@map("infraestructura")
+}
+
+model Databases {
+  id                           Int      @id @default(autoincrement())
+  proyecto_id                  Int      @unique
+  herramientas_desarrollo      String?
+  ide_compiladores             String?
+  version_ide_comp             String?
+  modo_licenciamiento_ide      String?
+  base_datos_nombre_comercial  String?
+  version_bd                   String?
+  modo_licencia_bd             String?
+  tipo_licencia_bd             String?
+  herramienta_desarrollo_bd    String?
+  tamano_actual_value          Float?
+  tamano_actual_unit           Unit?
+  tamano_max_permitido_value   Float?
+  tamano_max_permitido_unit    Unit?
+  servidor_que_aloja           String?
+  mantenimiento                String?
+  backup_periodico             Boolean?
+  depuracion_automatica        Boolean?
+
+  responsable_mantenimiento    String?
+  contiene_store_procedure     Boolean?
+  servidor_ejecucion_so        String?
+  version_so                   String?
+
+  proyecto                     Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
+
+  @@map("databases")
+}
+
+model Tecnologias {
+  id                    Int      @id @default(autoincrement())
+  proyecto_id           Int      @unique
+  lenguaje_desarrollo   String?
+  base_datos            String?
+  control_versiones     String?
+  tamano_bd_value       Float?
+  tamano_bd_unit        Unit?
+  alojamiento_infra     String?
+  label                 String?
+  mantenimiento_soporte String?
+  status_pmo            String?
+  status_salud          String?
+  changelog             String?
+  ano_inicio_sistema    Int?
+  usuarios_internos     Int?
+  usuarios_externos     Int?
+
+  proyecto              Proyecto @relation(fields: [proyecto_id], references: [id], onDelete: Cascade)
+
+  @@map("tecnologias")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPERADMIN
+}
+
+model Usuario {
+  id            Int    @id @default(autoincrement())
+  nombre        String
+  Apellido      String @default("")
+  email         String @unique
+  password_hash String
+  role          Role   @default(USER)
+
+  @@map("usuarios")
+}
+
+model Integracion {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  detalles  String?
+  proyectos Proyecto[] @relation("ProyectoIntegraciones")
+
+  @@map("integraciones")
+}
+
+model DashboardChart {
+  id        Int      @id @default(autoincrement())
+  title     String
+  chartType String // e.g., 'bar', 'pie', 'line'
+  dataType  String // e.g., 'projectsByCategory', 'staffByRole', 'totalCounts'
+  options   String?  // JSON string for chart-specific options (e.g., colors, labels)
+  order     Int      @default(0) // Order in which charts appear on the dashboard
+  enabled   Boolean  @default(true) // Whether the chart is active on the dashboard
+
+  @@map("dashboard_charts")
+}
