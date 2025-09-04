@@ -1,0 +1,21 @@
+1. Abre una nueva terminal en la raíz de tu proyecto.
+
+   2. Navega al directorio donde se guardará la base de datos de logs:
+   1     cd backend/prisma
+
+   3. Conéctate a la base de datos con el cliente de línea de comandos de
+      SQLite:
+
+   1     sqlite3 monolog.db
+      Nota: Si el archivo aún no existe, este comando te dará un error. 
+  Se creará automáticamente con el primer log de error.
+
+   4. Una vez dentro de la consola de SQLite, puedes ejecutar consultas
+      SQL. Para ver todos los logs ordenados por fecha, puedes usar:
+   1     SELECT * FROM logs ORDER BY timestamp DESC;
+      También puedes hacer consultas más específicas, por ejemplo, para
+  ver solo los mensajes:
+   1     SELECT timestamp, message FROM logs;
+
+   5. Para salir de la consola de SQLite, simplemente escribe:
+   1     .quit

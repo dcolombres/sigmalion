@@ -20,7 +20,7 @@ module.exports = (prisma) => {
     modalidad: Joi.string().valid(...modalidadStaffEnumValues).allow(null, ''),
     experiencia: Joi.string().valid(...experienciaStaffEnumValues).allow(null, ''),
     origen: Joi.string().allow(null, ''),
-    email: Joi.string().email().allow(null, ''),
+    email: Joi.string().email().optional(),
     skills: Joi.string().allow(null, ''),
     desempeno_ley_dto: Joi.string().allow(null, ''),
     hhee: Joi.string().allow(null, ''),
@@ -125,8 +125,7 @@ module.exports = (prisma) => {
       ]);
       res.json({ staff, totalCount });
     } catch (error) {
-      console.error('Error fetching staff:', error);
-      res.status(500).json({ error: 'An error occurred while fetching staff.' });
+      next(error);
     }
   });
 
@@ -161,21 +160,19 @@ module.exports = (prisma) => {
    *         description: Internal server error
    */
   // Create a new staff member
-  router.post('/', checkAdmin, async (req, res) => {
-    const { error, value } = staffSchema.validate(req.body);
-
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
+  router.post('/', checkAdmin, async (req, res, next) => {
     try {
+      const { error, value } = staffSchema.validate(req.body);
+      if (error) {
+        error.isJoi = true;
+        throw error;
+      }
       const newStaff = await prisma.staff.create({
         data: value,
       });
       res.status(201).json(newStaff);
     } catch (error) {
-      console.error('Error creating staff member:', error);
-      res.status(500).json({ error: 'An error occurred while creating the staff member.' });
+      next(error);
     }
   });
 
@@ -209,7 +206,7 @@ module.exports = (prisma) => {
    *         description: Internal server error
    */
   // GET a single staff member by ID
-  router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
       const staff = await prisma.staff.findUnique({
@@ -229,8 +226,7 @@ module.exports = (prisma) => {
         res.status(404).json({ error: 'Staff member not found' });
       }
     } catch (error) {
-      console.error('Error fetching staff member:', error);
-      res.status(500).json({ error: 'An error occurred while fetching staff member.' });
+      next(error);
     }
   });
 
@@ -274,23 +270,25 @@ module.exports = (prisma) => {
    *         description: Internal server error
    */
   // Update a staff member
-  router.put('/:id', checkAdmin, async (req, res) => {
+  router.put('/:id', checkAdmin, async (req, res, next) => {
     const { id } = req.params;
-    const { error, value } = staffSchema.validate(req.body);
-
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
     try {
+      const { error, value } = staffSchema.validate(req.body);
+      if (error) {
+        error.isJoi = true;
+        throw error;
+      }
+
+      // Exclude relations from the update payload
+      delete value.proyectos;
+
       const updatedStaff = await prisma.staff.update({
         where: { id: parseInt(id, 10) },
         data: value,
       });
       res.json(updatedStaff);
     } catch (error) {
-      console.error('Error updating staff member:', error);
-      res.status(500).json({ error: 'An error occurred while updating staff member.' });
+      next(error);
     }
   });
 
@@ -322,7 +320,7 @@ module.exports = (prisma) => {
    *         description: Internal server error
    */
   // Delete a staff member
-  router.delete('/:id', checkAdmin, async (req, res) => {
+  router.delete('/:id', checkAdmin, async (req, res, next) => {
     const { id } = req.params;
     try {
       await prisma.staff.delete({
@@ -330,8 +328,7 @@ module.exports = (prisma) => {
       });
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting staff member:', error);
-      res.status(500).json({ error: 'An error occurred while deleting staff member.' });
+      next(error);
     }
   });
 

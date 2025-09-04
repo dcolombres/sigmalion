@@ -149,6 +149,8 @@ model Cliente {
   id                            Int             @id @default(autoincrement())
   cliente                       String?
   mail_cliente                  String?
+  datos_de_contacto             String?
+  dependencia                   String?
   cel_cliente                   String?
   observacion_general           String?
   nombre_publico                String?

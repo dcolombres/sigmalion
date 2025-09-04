@@ -50,10 +50,16 @@
               <label for="cliente" class="form-label">Cliente</label>
               <input type="text" class="form-control" id="cliente" v-model="newCliente.cliente" required>
             </div>
-            <div class="mb-3">
-              <label for="mail_cliente" class="form-label">Email</label>
-              <input type="email" class="form-control" id="mail_cliente" v-model="newCliente.mail_cliente">
-            </div>
+<div>
+<label>Datos de Contacto</label>
+<input v-model="newCliente.datos_de_contacto" type="text" />
+</div>
+
+<div>
+<label>Dependencia</label>
+<input v-model="newCliente.dependencia" type="text" placeholder="organigrama vigente" />
+</div>
+            
             <div class="mb-3">
               <label for="cel_cliente" class="form-label">Celular</label>
               <input type="text" class="form-control" id="cel_cliente" v-model="newCliente.cel_cliente">
@@ -111,10 +117,10 @@ const columns = [
 // Form related state and functions
 const showForm = ref(false);
 const newCliente = ref({
-  cliente: '',
-  mail_cliente: '',
-  cel_cliente: '',
-  estado: 'Activo',
+cliente: '',
+datos_de_contacto: '',
+dependencia: '',
+cel_cliente: '',
 });
 
 const fetchClientes = async () => {

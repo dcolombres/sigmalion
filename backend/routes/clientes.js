@@ -9,7 +9,9 @@ module.exports = (prisma) => {
 
   const clienteSchema = Joi.object({
     cliente: Joi.string().allow(null, ''),
-    mail_cliente: Joi.string().email().allow(null, ''),
+    mail_cliente: Joi.string().email().allow(null, ''), // Kept for data integrity
+    datos_de_contacto: Joi.string().allow(null, ''),
+    dependencia: Joi.string().allow(null, ''),
     cel_cliente: Joi.string().allow(null, ''),
     observacion_general: Joi.string().allow(null, ''),
     nombre_publico: Joi.string().allow(null, ''),
@@ -20,65 +22,13 @@ module.exports = (prisma) => {
     dependencia_uso: Joi.string().allow(null, ''),
     uso_interno_ministerio: Joi.boolean().allow(null),
     uso_interno_equipo_desarrollo: Joi.boolean().allow(null),
-  });
+  }).unknown(true);
 
-  /**
-   * @swagger
-   * tags:
-   *   name: Clientes
-   *   description: API for managing clients
-   */
-
-  /**
-   * @swagger
-   * /clientes:
-   *   get:
-   *     summary: Get all clients with search and pagination
-   *     tags: [Clientes]
-   *     security:
-   *       - bearerAuth: []
-   *     parameters:
-   *       - in: query
-   *         name: search
-   *         schema:
-   *           type: string
-   *         description: Search term for client name
-   *       - in: query
-   *         name: page
-   *         schema:
-   *           type: integer
-   *           default: 1
-   *         description: Page number
-   *       - in: query
-   *         name: pageSize
-   *         schema:
-   *           type: integer
-   *           default: 10
-   *         description: Number of items per page
-   *     responses:
-   *       200:
-   *         description: A list of clients
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 clientes:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/ClienteSummary'
-   *                 totalCount:
-   *                   type: integer
-   *       401:
-   *         description: Unauthorized, no token or invalid token
-   *       500:
-   *         description: Internal server error
-   */
   // Obtener todos los clientes con búsqueda y paginación
-  router.get('/', async (req, res) => {
+  router.get('/', async (req, res, next) => {
     const { search, page, pageSize } = req.query;
-    const take = parseInt(pageSize, 10) || 10; // Tamaño de página por defecto: 10
-    const skip = (parseInt(page, 10) - 1) * take || 0; // Por defecto, primera página
+    const take = parseInt(pageSize, 10) || 10;
+    const skip = (parseInt(page, 10) - 1) * take || 0;
 
     let where = {};
     if (search) {
@@ -111,91 +61,29 @@ module.exports = (prisma) => {
       ]);
       res.json({ clientes, totalCount });
     } catch (error) {
-      console.error('Error fetching clientes:', error);
-      res.status(500).json({ error: 'An error occurred while fetching clientes.' });
+      next(error);
     }
   });
 
-  /**
-   * @swagger
-   * /clientes:
-   *   post:
-   *     summary: Create a new client
-   *     tags: [Clientes]
-   *     security:
-   *       - bearerAuth: []
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/ClienteCreate'
-   *     responses:
-   *       201:
-   *         description: Client created successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Cliente'
-   *       400:
-   *         description: Bad request, validation error
-   *       401:
-   *         description: Unauthorized, no token or invalid token
-   *       403:
-   *         description: Forbidden, user not an admin
-   *       500:
-   *         description: Internal server error
-   */
   // Crear un nuevo cliente
-  router.post('/', checkAdmin, async (req, res) => {
-    const { error, value } = clienteSchema.validate(req.body);
-
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
+  router.post('/', checkAdmin, async (req, res, next) => {
     try {
+      const { error, value } = clienteSchema.validate(req.body);
+      if (error) {
+        error.isJoi = true;
+        throw error;
+      }
       const nuevoCliente = await prisma.cliente.create({
         data: value,
       });
       res.status(201).json(nuevoCliente);
     } catch (error) {
-      console.error('Error creating cliente:', error);
-      res.status(500).json({ error: 'An error occurred while creating the cliente.' });
+      next(error);
     }
   });
 
-  /**
-   * @swagger
-   * /clientes/{id}:
-   *   get:
-   *     summary: Get a single client by ID
-   *     tags: [Clientes]
-   *     security:
-   *       - bearerAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         schema:
-   *           type: integer
-   *         required: true
-   *         description: Client ID
-   *     responses:
-   *       200:
-   *         description: Client details
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Cliente'
-   *       401:
-   *         description: Unauthorized, no token or invalid token
-   *       404:
-   *         description: Client not found
-   *       500:
-   *         description: Internal server error
-   */
   // Obtener un cliente por ID
-  router.get('/:id', async (req, res) => {
+  router.get('/:id', async (req, res, next) => {
     const { id } = req.params;
     try {
       const cliente = await prisma.cliente.findUnique({
@@ -215,100 +103,31 @@ module.exports = (prisma) => {
         res.status(404).json({ error: 'Cliente not found' });
       }
     } catch (error) {
-      console.error('Error fetching cliente:', error);
-      res.status(500).json({ error: 'An error occurred while fetching cliente.' });
+      next(error);
     }
   });
 
-  /**
-   * @swagger
-   * /clientes/{id}:
-   *   put:
-   *     summary: Update a client by ID
-   *     tags: [Clientes]
-   *     security:
-   *       - bearerAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         schema:
-   *           type: integer
-   *         required: true
-   *         description: Client ID
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             $ref: '#/components/schemas/ClienteUpdate'
-   *     responses:
-   *       200:
-   *         description: Client updated successfully
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/Cliente'
-   *       400:
-   *         description: Bad request, validation error
-   *       401:
-   *         description: Unauthorized, no token or invalid token
-   *       403:
-   *         description: Forbidden, user not an admin
-   *       404:
-   *         description: Client not found
-   *       500:
-   *         description: Internal server error
-   */
   // Actualizar un cliente
-  router.put('/:id', checkAdmin, async (req, res) => {
+  router.put('/:id', checkAdmin, async (req, res, next) => {
     const { id } = req.params;
-    const { error, value } = clienteSchema.validate(req.body);
-
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-
     try {
+      const { error, value } = clienteSchema.validate(req.body);
+      if (error) {
+        error.isJoi = true;
+        throw error;
+      }
       const clienteActualizado = await prisma.cliente.update({
         where: { id: parseInt(id, 10) },
         data: value,
       });
       res.json(clienteActualizado);
     } catch (error) {
-      console.error('Error updating cliente:', error);
-      res.status(500).json({ error: 'An error occurred while updating cliente.' });
+      next(error);
     }
   });
 
-  /**
-   * @swagger
-   * /clientes/{id}:
-   *   delete:
-   *     summary: Delete a client by ID
-   *     tags: [Clientes]
-   *     security:
-   *       - bearerAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         schema:
-   *           type: integer
-   *         required: true
-   *         description: Client ID
-   *     responses:
-   *       204:
-   *         description: Client deleted successfully
-   *       401:
-   *         description: Unauthorized, no token or invalid token
-   *       403:
-   *         description: Forbidden, user not an admin
-   *       404:
-   *         description: Client not found
-   *       500:
-   *         description: Internal server error
-   */
   // Eliminar un cliente
-  router.delete('/:id', checkAdmin, async (req, res) => {
+  router.delete('/:id', checkAdmin, async (req, res, next) => {
     const { id } = req.params;
     try {
       await prisma.cliente.delete({
@@ -316,8 +135,7 @@ module.exports = (prisma) => {
       });
       res.status(204).send();
     } catch (error) {
-      console.error('Error deleting cliente:', error);
-      res.status(500).json({ error: 'An error occurred while deleting cliente.' });
+      next(error);
     }
   });
 

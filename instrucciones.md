@@ -98,3 +98,16 @@ Las rutas en `backend/index.js` que requieren autenticación utilizan el middlew
 -   **Estilos:** La aplicación utiliza estilos básicos. Considerar la integración de un framework CSS (ej. Tailwind CSS, Bootstrap) o un sistema de diseño.
 -   **Testing:** Añadir pruebas unitarias y de integración para el backend y el frontend.
 
+## Puesta en Marcha Rápida
+
+Para levantar todo el entorno de desarrollo, abre dos terminales:
+
+1.  **Backend:**
+    ```bash
+    cd backend && if [ ! -d "node_modules" ]; then npm install; fi && npx prisma migrate deploy && node index.js
+    ```
+2.  **Frontend:**
+    ```bash
+    cd frontend && if [ ! -d "node_modules" ]; then npm install; fi && npm run dev
+    ```
+

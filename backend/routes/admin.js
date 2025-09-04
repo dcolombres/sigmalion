@@ -172,7 +172,7 @@ function adminRoutes(prisma) {
     router.get('/clientes/template', checkAdmin, (req, res) => {
         try {
             const fields = [
-                'cliente', 'mail_cliente', 'cel_cliente', 'observacion_general', 'nombre_publico', 
+                'cliente', 'datos_de_contacto', 'dependencia', 'cel_cliente', 'observacion_general', 'nombre_publico', 
                 'nombre_interno', 'tipo', 'fecha_inicio_desarrollo', 'estado', 'dependencia_uso', 
                 'uso_interno_ministerio', 'uso_interno_equipo_desarrollo'
             ];
@@ -271,7 +271,7 @@ function adminRoutes(prisma) {
                     data = await prisma.cliente.findMany();
                     filename = 'clientes.csv';
                     fields = [
-                        'id', 'cliente', 'mail_cliente', 'cel_cliente', 'observacion_general', 
+                        'id', 'cliente', 'datos_de_contacto', 'dependencia', 'cel_cliente', 'observacion_general', 
                         'nombre_publico', 'nombre_interno', 'tipo', 'fecha_inicio_desarrollo', 
                         'estado', 'dependencia_uso', 'uso_interno_ministerio', 'uso_interno_equipo_desarrollo'
                     ];

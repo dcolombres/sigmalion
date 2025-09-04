@@ -4,24 +4,34 @@
 
 Todos los cambios notables de este proyecto serán documentados en este archivo.
 
+## [0.3.1] - 2025-09-03
+
+### Mejorado
+- Se ha unificado y simplificado el proceso de inicio del entorno de desarrollo. La documentación (`README.md`, `instrucciones.md`) ha sido actualizada para reflejar el nuevo método.
+
+### Corregido
+- Solucionado un error crítico en el inicio de sesión (`500 Internal Server Error`) causado por la ausencia de la variable de entorno `JWT_SECRET`.
+- Se implementó un sistema de reporte de errores más detallado en el backend para facilitar el diagnóstico de futuros problemas en la API.
+
+
 ## [0.3.0] - 2025-09-02
 
 ### Añadido
-- **Dashboard:**
-  - Nueva vista de Dashboard con gráficos configurables para visualizar métricas clave.
-  - Componentes `ChartCard` para mostrar gráficos y `DashboardConfigManager` para gestionar la configuración del dashboard.
+- **Módulo de Administración:**
+  - Nueva sección `/admin` con funcionalidades avanzadas de gestión de datos.
+  - **Importación y Exportación Masiva:** Capacidad para importar y exportar en formato CSV los datos de Proyectos, Staff, Clientes e Integraciones.
+  - **Plantillas CSV:** Descarga de plantillas desde el panel de administración para facilitar la carga de nuevos datos.
+- **Dashboard Configurable:**
+  - Nueva vista de Dashboard con gráficos configurables.
+  - Panel en `/admin` para que los administradores puedan gestionar qué gráficos se muestran en el dashboard.
 - **Gestión de Proyectos:**
   - Añadido campo `estado` a los proyectos para un mejor seguimiento.
 - **Gestión de Usuarios:**
   - Implementación de roles de usuario (`USER`, `ADMIN`, `SUPERADMIN`) para control de acceso.
-- **General:**
-  - Nuevos endpoints en el backend para el dashboard y su configuración.
-  - Nuevas pruebas unitarias y de extremo a extremo para las nuevas funcionalidades.
-  - Actualización masiva de dependencias en el frontend.
-  - Nueva documentación técnica y de marketing.
 
 ### Corregido
-- Se ha modificado la ruta de staff para que devuelva el nombre del staff y no el id.
+- La ruta de staff ahora devuelve el nombre del staff en lugar de solo el ID.
+- Mejoras en la consistencia de tipos de datos y valores de enumeración para los modelos de Staff y Proyectos, especialmente durante la importación de CSV.
 
 ## [0.2.2] - 2025-08-29
 

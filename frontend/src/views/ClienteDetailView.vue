@@ -69,20 +69,34 @@ const API_BASE_URL = 'http://localhost:3000/api';
 const allProjects = ref([]);
 const estadoProyectoEnumValues = ref([]);
 
+// const clientFields = [
+//  { key: 'cliente', label: 'Nombre Cliente' },
+//  { key: 'mail_cliente', label: 'Email' },
+//  { key: 'cel_cliente', label: 'Celular' },
+//  { key: 'observacion_general', label: 'Observación General' },
+//  { key: 'nombre_publico', label: 'Nombre Público' },
+//  { key: 'nombre_interno', label: 'Nombre Interno' },
+//  { key: 'tipo', label: 'Tipo' },
+//  { key: 'fecha_inicio_desarrollo', label: 'Fecha Inicio Desarrollo', type: 'date' },
+//  { key: 'estado', label: 'Estado' },
+//  { key: 'dependencia_uso', label: 'Dependencia de Uso' },
+//  { key: 'uso_interno_ministerio', label: 'Uso Interno Ministerio', type: 'boolean' },
+//  { key: 'uso_interno_equipo_desarrollo', label: 'Uso Interno Equipo Desarrollo', type: 'boolean' },];
+
 const clientFields = [
-  { key: 'cliente', label: 'Nombre Cliente' },
-  { key: 'mail_cliente', label: 'Email' },
-  { key: 'cel_cliente', label: 'Celular' },
-  { key: 'observacion_general', label: 'Observación General' },
-  { key: 'nombre_publico', label: 'Nombre Público' },
-  { key: 'nombre_interno', label: 'Nombre Interno' },
-  { key: 'tipo', label: 'Tipo' },
-  { key: 'fecha_inicio_desarrollo', label: 'Fecha Inicio Desarrollo', type: 'date' },
-  { key: 'estado', label: 'Estado' },
-  { key: 'dependencia_uso', label: 'Dependencia de Uso' },
-  { key: 'uso_interno_ministerio', label: 'Uso Interno Ministerio', type: 'boolean' },
-  { key: 'uso_interno_equipo_desarrollo', label: 'Uso Interno Equipo Desarrollo', type: 'boolean' },
-];
+{ key: 'cliente', label: 'Cliente' },
+{ key: 'datos_de_contacto', label: 'Datos de Contacto' },
+{ key: 'dependencia', label: 'Dependencia', placeholder: 'organigrama vigente' },
+{ key: 'cel_cliente', label: 'Celular' },
+{ key: 'observacion_general', label: 'Observaciones' },
+{ key: 'nombre_publico', label: 'Nombre Público' },
+{ key: 'nombre_interno', label: 'Nombre Interno' },
+{ key: 'tipo', label: 'Tipo' },
+{ key: 'fecha_inicio_desarrollo', label: 'Inicio Desarrollo', type: 'date' },
+{ key: 'estado', label: 'Estado' },
+{ key: 'dependencia_uso', label: 'Dependencia de Uso' }, { key: 'uso_interno_ministerio', label: 'Uso Interno Ministerio', type: 'boolean' },
+{ key: 'uso_interno_equipo_desarrollo', label: 'Uso Interno Equipo', type: 'boolean' },];
+
 
 const clientFormFields = ref([]); // Will be populated after fetching enums
 
